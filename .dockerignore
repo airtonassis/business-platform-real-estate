@@ -1,0 +1,22 @@
+# Keep the build context limited to the application source copied by Dockerfile.
+**
+!backend/
+!backend/**
+
+# Never send local build output or credential material to the Docker daemon.
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/
+backend/**/appsettings*.json
+backend/**/Properties/launchSettings.json
+backend/**/*.user
+backend/**/*.suo
+backend/**/.env*
+backend/**/*.env
+backend/**/*.env.*
+backend/**/*.pfx
+backend/**/*.p12
+backend/**/*.key
+backend/**/*.pem
+backend/**/secrets/
+backend/**/secrets/**

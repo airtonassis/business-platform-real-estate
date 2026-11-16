@@ -1,0 +1,78 @@
+# Add this fragment to the existing business-core-g3 project configuration.
+# It deliberately publishes no host ports and does not replace existing services.
+services:
+  erp-postgres:
+    image: "${ERP_POSTGRES_IMAGE:?Use the approved PostgreSQL 17 image digest}"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${ERP_DB_NAME:?Set an ERP-only database name}"
+      POSTGRES_USER: "${ERP_BOOTSTRAP_USER:?Use a dedicated ERP bootstrap role}"
+      POSTGRES_PASSWORD: "${ERP_BOOTSTRAP_PASSWORD:?Load from EasyPanel secret storage}"
+    volumes:
+      - erp-postgres-data:/var/lib/postgresql/data
+    networks:
+      - erp-private
+    mem_limit: "${ERP_POSTGRES_MEMORY_LIMIT:-1536m}"
+    cpus: "${ERP_POSTGRES_CPU_LIMIT:-1.00}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  erp-web:
+    image: "${ERP_IMAGE:?Use the immutable ERP image reference by digest}"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    expose:
+      - "8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__Erp: "${ERP_RUNTIME_CONNECTION_STRING:?Use the least-privileged ERP runtime credential}"
+      Core__BaseUrl: "${CORE_BASE_URL:?Use the trusted HTTPS Core API origin}"
+      Core__CertificateAuthorityFile: "${CORE_CA_FILE:-}"
+      Oidc__Authority: "${OIDC_AUTHORITY:?Use the existing Core identity issuer}"
+      Oidc__Audience: "${OIDC_AUDIENCE:?Use the Core API audience}"
+      Oidc__ClientId: "${OIDC_CLIENT_ID:?Use the ERP-specific OIDC client}"
+      Oidc__ClientSecret: "${OIDC_CLIENT_SECRET:-}"
+      Oidc__CertificateAuthorityFile: "${OIDC_CA_FILE:-}"
+      DataProtection__KeysPath: /home/app/.aspnet/DataProtection-Keys
+      DataProtection__CertificatePath: /run/secrets/erp-data-protection.pfx
+      DataProtection__CertificatePassword: "${ERP_DP_CERT_PASSWORD:?Load the Data Protection PFX password from EasyPanel secrets}"
+      ForwardedHeaders__KnownProxies__0: "${FORWARDED_HEADERS_KNOWN_PROXY_0:?Set the exact EasyPanel proxy IP observed on the ERP connection}"
+      ForwardedHeaders__AllowedHosts__0: "${FORWARDED_HEADERS_ALLOWED_HOST_0:?Set the exact public ERP hostname}"
+    volumes:
+      - erp-data-protection:/home/app/.aspnet/DataProtection-Keys
+      - type: bind
+        source: "${ERP_DP_CERT_HOST_PATH:?Mount the Data Protection PFX from a protected host path}"
+        target: /run/secrets/erp-data-protection.pfx
+        read_only: true
+    depends_on:
+      erp-postgres:
+        condition: service_healthy
+    networks:
+      - erp-private
+      - core-integration
+    mem_limit: "${ERP_WEB_MEMORY_LIMIT:-768m}"
+    cpus: "${ERP_WEB_CPU_LIMIT:-0.75}"
+
+volumes:
+  erp-postgres-data:
+    name: business-core-g3-erp-postgres-data
+  erp-data-protection:
+    name: business-core-g3-erp-data-protection
+
+networks:
+  erp-private:
+    internal: true
+  core-integration:
+    external: true
+    name: "${CORE_NETWORK_NAME:?Set the existing EasyPanel network that provides verified Core/identity reachability}"
