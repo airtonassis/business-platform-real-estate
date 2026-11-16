@@ -1,0 +1,40 @@
+/* AraIa v2 · focused UX validation · 2026-11-05. Existing palette and shell preserved. */
+.login-disclaimer{font-size:12px}
+.people-mobile,.permission-mobile{display:none}
+.main-content:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
+@media(max-width:800px){
+  .people-desktop,.core-role-grid,.permission-comparison{display:none!important}
+  .people-mobile{display:block;list-style:none;padding:0;margin:0}
+  .person-compact{padding:22px 20px;border-top:1px solid var(--border)}
+  .person-compact-heading{display:flex;align-items:center;gap:12px}
+  .person-compact-heading>div{min-width:0}
+  .person-compact-heading strong{display:block;font-size:15px;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+  .person-compact-heading span:not(.avatar){display:block;font-size:12px;color:var(--text-muted);overflow-wrap:anywhere;line-height:1.7}
+  .compact-company{font-size:12px;color:var(--text-muted);margin-top:12px}
+  .compact-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .compact-tags .badge{font-size:12px}
+  .compact-apps{font-size:13px;line-height:1.7;margin-top:14px!important;overflow-wrap:anywhere}
+  .compact-apps>span{display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+  .compact-details{display:flex;width:100%;min-height:44px;margin-top:17px;font-size:14px;justify-content:space-between}
+  .permission-mobile{display:block}
+  .permission-mobile>h2{font-size:18px;margin-bottom:9px}
+  .permission-mobile>p{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+  .permission-disclosure{margin-bottom:14px;overflow:hidden}
+  .permission-disclosure summary{padding:18px 20px;min-height:52px;font-size:16px;font-weight:600;cursor:pointer}
+  .permission-disclosure summary:focus-visible{outline:3px solid var(--focus);outline-offset:-4px}
+  .disclosure-body{padding:0 20px 22px;border-top:1px solid var(--border)}
+  .disclosure-body>p{font-size:14px;line-height:1.75;color:var(--text-muted);margin-top:18px}
+  .disclosure-body h3{font-size:14px;margin:22px 0 12px}
+  .disclosure-body ul{list-style:none;padding:0;margin:0;display:grid;gap:14px}
+  .disclosure-body li{display:flex;gap:10px;font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+  .disclosure-body li>.icon{width:17px;height:17px;margin-top:3px;color:var(--success)}
+  .disclosure-body .not-permitted .icon{color:var(--text-muted)}
+  .table-toolbar,.toolbar-controls{min-width:0;max-width:100%}
+  .toolbar-controls{flex-wrap:wrap;width:100%}
+  .search-field{min-width:0;flex:1 1 165px}
+  .search-field input{min-width:0;width:100%}
+  .table-toolbar h2{font-size:16px}
+  .table-toolbar p,.filter-panel label,.table-footer{font-size:12px}
+  .table-footer{flex-wrap:wrap;gap:12px}
+  .bottom-note{font-size:12px;line-height:1.75;overflow-wrap:anywhere}
+}

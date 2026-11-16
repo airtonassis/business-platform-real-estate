@@ -1,0 +1,114 @@
+@page "/commercial/customers/{key}"
+@model RealEstate.Web.Pages.CustomerModel
+@using RealEstate.Domain
+@{
+    ViewData["Title"]=Model.IsNew?"Novo cliente":"Atendimento / Negociação";
+    var activePanel=Model.ActivePanel;
+}
+<a href="/commercial/customers">← Clientes e Atendimentos</a>
+<div class="page-heading"><div><p class="eyebrow">Comercial</p><h1>@ViewData["Title"]</h1></div></div>
+@if(Model.Notice is not null){<p class="notice" role="status">@Model.Notice</p>}
+@if(Model.Error is not null){<p class="notice error" role="alert">@Model.Error</p>}
+<div asp-validation-summary="All" role="alert"></div>
+@if(Model.DirectoryError is not null&&Model.DirectoryError!=Model.Error){<p class="notice" role="status">@Model.DirectoryError</p>}
+
+@if(Model.CustomerFile is {} customer){
+    var data=customer.Customer.Data;
+    var latestByProperty=Model.CanReadProperty?Model.Interactions.GroupBy(i=>i.PresentationId).Select(g=>g.First()).ToArray():Array.Empty<CommercialInteraction>();
+    var lastContact=customer.Contacts.OrderByDescending(c=>c.At).FirstOrDefault();
+    var nextAppointment=Model.Appointments.Where(a=>a.Status=="Agendado"&&a.StartsAt>=DateTimeOffset.UtcNow).OrderBy(a=>a.StartsAt).FirstOrDefault();
+    <section class="customer-file-summary" aria-label="Resumo do atendimento">
+        <div class="customer-file-identity">
+            <div><p class="eyebrow">Cliente</p><h2>@data.Name</h2>
+                <p>@(string.IsNullOrWhiteSpace(data.Phone)?"Telefone não informado":data.Phone) <span aria-hidden="true">·</span> @(string.IsNullOrWhiteSpace(data.Email)?"E-mail não informado":data.Email)</p>
+            </div>
+            <div class="customer-file-interest"><p class="eyebrow">Interesse principal</p><strong>@data.Interest</strong><p>Responsável: <strong>@Model.ResponsibleDisplayName</strong></p></div>
+        </div>
+        @if(activePanel=="overview"){
+            <dl class="customer-file-metrics">
+                @if(Model.CanReadProperty){<div><dt>Imóveis apresentados</dt><dd>@latestByProperty.Length</dd></div>}
+                <div><dt>Último atendimento</dt><dd>@(lastContact is null?"Nenhum registrado":lastContact.At.ToOffset(TimeSpan.FromHours(-3)).ToString("dd/MM/yyyy HH:mm"))</dd></div>
+                <div><dt>Próximo compromisso</dt><dd>@(nextAppointment is null?"Nenhum agendado":$"{AgendaModel.Local(nextAppointment.StartsAt):dd/MM/yyyy HH:mm} · {nextAppointment.Kind}")</dd></div>
+            </dl>
+            <div class="customer-file-quick-actions" aria-label="Ações rápidas">
+                @if(Model.CanViewNegotiations){<a class="button secondary" href="/commercial/negotiations?CustomerId=@Model.Key">Negociações do cliente</a>}
+                @if(Model.CanReadCommercial&&Model.CanReadProperty){<a class="button primary" href="@Model.PanelHref("properties")&amp;Search=true#property-search">Buscar imóveis</a>}
+                @if(Model.CanContact){<a class="button secondary" href="@Model.PanelHref("history")#contact-form">Registrar atendimento</a>}
+                @if(Model.CanSchedule){<a class="button secondary" href="@Model.PanelHref("agenda")#appointment-create">Agendar visita ou atendimento</a>}
+            </div>
+        }
+    </section>
+    @if(activePanel!="overview"){
+        <a class="customer-summary-return" href="@Model.PanelHref("overview")">← Resumo do atendimento</a>
+    }
+    <nav class="customer-panel-nav" aria-label="Áreas do atendimento">
+        @if(Model.CanReadProperty){<a href="@Model.PanelHref("properties")" aria-current="@(activePanel=="properties"?"page":null)"><span>Imóveis apresentados</span><small>@latestByProperty.Length registro(s)</small></a>}
+        <a href="@Model.PanelHref("history")" aria-current="@(activePanel=="history"?"page":null)"><span>Atendimentos e histórico</span><small>@customer.Contacts.Count registro(s)</small></a>
+        @if(Model.CanSchedule||Model.Appointments.Count>0){<a href="@Model.PanelHref("agenda")" aria-current="@(activePanel=="agenda"?"page":null)"><span>Agenda e atividades</span><small>@Model.Appointments.Count compromisso(s)</small></a>}
+        <a href="@Model.PanelHref("data")" aria-current="@(activePanel=="data"?"page":null)"><span>Dados do cliente</span><small>Cadastro</small></a>
+    </nav>
+
+    @if(activePanel=="properties"){
+        <partial name="_CustomerCommercial" model="Model"/>
+    }
+    @if(activePanel=="history"){
+        <section id="customer-history" class="card form-card customer-panel">
+            <h2>Atendimentos e histórico</h2>
+            @if(Model.CanContact){<form id="contact-form" method="post" asp-page-handler="Contact"><input type="hidden" name="Panel" value="history"/><div class="form-grid"><label class="form-field">Tipo de atendimento<select asp-for="ContactKind">@foreach(var value in CustomerRules.ContactKinds){<option>@value</option>}</select></label><label class="form-field">Descrição<textarea asp-for="Description" required maxlength="4000"></textarea></label></div><button class="button primary">Registrar atendimento</button></form>}
+            @if(customer.Contacts.Count==0){<p>Nenhum atendimento registrado.</p>}
+            @foreach(var entry in Model.Timeline){
+                @if(entry.Contact is {} contact){<article class="card form-card customer-panel"><h3>@contact.Kind</h3><p><time datetime="@contact.At.ToString("O")">@contact.At.ToOffset(TimeSpan.FromHours(-3)).ToString("dd/MM/yyyy HH:mm") (Brasília)</time></p><p class="customer-description">@contact.Description</p>@foreach(var interaction in Model.Interactions.Where(i=>i.ContactId==contact.Id)){<p>@if(Model.CanReadProperty){<a href="/commercial/properties/@interaction.PropertyId">@interaction.PropertyCode</a>}else{@interaction.PropertyCode} · @interaction.Status · @interaction.Category · @interaction.Reason</p><p class="customer-description">@interaction.Notes</p>}<p class="muted">Responsável na ocasião: Responsável cadastrado</p></article>}
+                else if(entry.Change is {} change){<article class="card form-card customer-panel"><h3>Alteração de responsável</h3><p>@change.At.ToOffset(TimeSpan.FromHours(-3)).ToString("dd/MM/yyyy HH:mm") (Brasília) · O vínculo do responsável foi atualizado.</p></article>}
+            }
+        </section>
+    }
+    @if(activePanel=="agenda"&&(Model.CanSchedule||Model.Appointments.Count>0)){
+        <section id="customer-agenda" class="card form-card customer-panel appointment-panel" aria-label="Agenda comercial">
+            <div class="appointment-heading"><div><p class="eyebrow">Comercial</p><h2>Agenda e atividades</h2></div><a href="/commercial/agenda">Abrir calendário</a></div>
+            @if(Model.SelectedVisit is {} visit){<section class="appointment-contextual" aria-label="Agendar visita ao imóvel apresentado"><h3>Agendar visita</h3><p><strong>Cliente:</strong> @customer.Customer.Data.Name</p><p><strong>Imóvel:</strong> @visit.PropertyCode · @visit.PropertyTitle</p><p><strong>Responsável:</strong> @Model.ResponsibleDisplayName</p><form method="post" asp-page-handler="ContextualVisit"><input type="hidden" asp-for="AppointmentRequestId"/><input type="hidden" name="ContextualPresentationId" value="@visit.PresentationId"/><div class="form-grid"><label class="form-field">Início (horário de Brasília)<input asp-for="AppointmentStart" type="datetime-local" required/></label><label class="form-field">Término (horário de Brasília)<input asp-for="AppointmentEnd" type="datetime-local" required/></label><label class="form-field">Local da visita<input asp-for="AppointmentLocation" maxlength="300" required/></label><label class="form-field full">Observações<textarea asp-for="AppointmentNotes" maxlength="4000"></textarea></label></div><button class="button primary" type="submit">Confirmar visita</button></form></section>}
+            @if(Model.CanSchedule){<details id="appointment-create" class="appointment-create" open="@(Model.AppointmentPropertySearch is not null)"><summary>Agendar visita ou atendimento</summary>@if(Model.CanVisitProperty){<form method="get" action="/commercial/customers/@Model.Key" class="appointment-property-search"><input type="hidden" name="Panel" value="agenda"/><label>Pesquisar imóvel na carteira<input asp-for="AppointmentPropertySearch" maxlength="200" placeholder="Código, título ou local"/></label><button class="button secondary" type="submit">Pesquisar</button></form>}<form method="post" asp-page-handler="Schedule" data-appointment-unit="@Model.AppointmentUnitName"><input type="hidden" asp-for="AppointmentRequestId"/><input type="hidden" name="Panel" value="agenda"/><fieldset class="appointment-kinds"><legend>Tipo de compromisso</legend><div class="appointment-kind-options">@foreach(var kind in AppointmentRules.Kinds.Where(k=>k!=AppointmentRules.PropertyVisit||Model.CanVisitProperty)){<label><input type="radio" asp-for="AppointmentKind" value="@kind"/><span class="appointment-kind-card"><span aria-hidden="true">@(kind==AppointmentRules.PropertyVisit?"⌂":kind==AppointmentRules.Office?"◇":"✧")</span>@kind</span></label>}</div></fieldset><div class="form-grid"><label class="form-field">Início (horário de Brasília)<input asp-for="AppointmentStart" type="datetime-local" required/></label><label class="form-field">Término (horário de Brasília)<input asp-for="AppointmentEnd" type="datetime-local" required/></label>@if(Model.CanVisitProperty){<label class="form-field">Imóvel existente, quando aplicável<select asp-for="AppointmentPropertyId"><option value="">Sem imóvel vinculado</option>@if(Model.AppointmentProperties is {} options){@foreach(var property in options.Properties){<option value="@property.Id">@(property.CommercialCode??property.Data.Title) · @property.Data.Title</option>}}</select></label>}<label class="form-field">Local da visita ou unidade<input asp-for="AppointmentLocation" maxlength="300" required placeholder="Endereço ou unidade"/></label><label class="form-field full">Observações<textarea asp-for="AppointmentNotes" maxlength="4000"></textarea></label></div><p class="muted">Na imobiliária, informe a unidade @Model.AppointmentUnitName. Para captação, informe o endereço; não é necessário cadastrar o imóvel antes.</p><button class="button primary" type="submit">Agendar compromisso</button></form></details>}
+            <div class="appointment-list">@if(Model.Appointments.Count==0){<p>Nenhum compromisso nesta ficha.</p>}@foreach(var appointment in Model.Appointments.OrderBy(a=>a.StartsAt)){<article class="appointment-card"><div><strong>@appointment.Kind</strong><span class="appointment-status">@appointment.Status</span></div><p><time datetime="@appointment.StartsAt.ToString("O")">@AgendaModel.Local(appointment.StartsAt).ToString("dd/MM/yyyy HH:mm")</time>–@AgendaModel.Local(appointment.EndsAt).ToString("HH:mm") · @appointment.Location</p><p>Responsável: @appointment.ResponsibleName</p>@if(appointment.PropertyId is not null){<p>Imóvel vinculado</p>}@if(appointment.Result is not null){<p>Resultado: @appointment.Result</p>}@if(Model.CanSchedule&&appointment.Status=="Agendado"){
+                <details><summary>Reagendar</summary><form method="post" asp-page-handler="Appointment" asp-route-action="Reagendar"><input type="hidden" name="Panel" value="agenda"/><input type="hidden" name="AppointmentId" value="@appointment.Id"/><input type="hidden" name="AppointmentVersion" value="@appointment.Version"/><input type="hidden" name="AppointmentRequestId" value="@Guid.NewGuid()"/><input type="hidden" name="AppointmentKind" value="@appointment.Kind"/><input type="hidden" name="AppointmentPropertyId" value="@appointment.PropertyId"/><label>Nova data e hora<input name="AppointmentStart" type="datetime-local" required/></label><label>Novo término<input name="AppointmentEnd" type="datetime-local" required/></label><label>Local<input name="AppointmentLocation" value="@appointment.Location" required/></label><button class="button secondary" type="submit">Salvar reagendamento</button></form></details>
+                <form method="post" asp-page-handler="Appointment" asp-route-action="Cancelar"><input type="hidden" name="Panel" value="agenda"/><input type="hidden" name="AppointmentId" value="@appointment.Id"/><input type="hidden" name="AppointmentVersion" value="@appointment.Version"/><button class="button secondary" type="submit">Cancelar compromisso</button></form>
+                <form method="post" asp-page-handler="Appointment" asp-route-action="Realizar"><input type="hidden" name="Panel" value="agenda"/><input type="hidden" name="AppointmentId" value="@appointment.Id"/><input type="hidden" name="AppointmentVersion" value="@appointment.Version"/><label>Resultado da visita ou atendimento<textarea name="AppointmentResult" maxlength="4000" required></textarea></label><button class="button primary" type="submit">Marcar como realizado</button></form>}
+                </article>}</div>
+            <details><summary>Histórico de alterações</summary>@foreach(var entry in Model.AppointmentEvents){<p>@AgendaModel.Local(entry.At).ToString("dd/MM/yyyy HH:mm") · @entry.Action · Responsável cadastrado · @AgendaModel.Local(entry.StartsAt).ToString("dd/MM/yyyy HH:mm")</p>}</details>
+        </section>
+    }
+    @if(activePanel=="data"){
+        <section id="customer-data" class="card form-card customer-panel"><h2>Dados do cliente</h2>
+            @if(Model.CanSave){<form method="post"><input type="hidden" name="Panel" value="data"/><input type="hidden" asp-for="Version"/><div class="form-grid">
+                <label class="form-field">Nome do cliente *<input asp-for="Input.Name" maxlength="200" required autocomplete="name"/></label>
+                <label class="form-field">Tipo de pessoa<select asp-for="Input.PersonType"><option>Física</option><option>Jurídica</option></select></label>
+                <label class="form-field">Telefone/WhatsApp<input asp-for="Input.Phone" maxlength="30" type="tel" autocomplete="tel"/></label>
+                <label class="form-field">E-mail<input asp-for="Input.Email" maxlength="254" type="email" autocomplete="email"/></label>
+                <label class="form-field">Origem do contato<select asp-for="Input.Origin">@foreach(var value in CustomerRules.Origins){<option>@value</option>}</select></label>
+                <fieldset class="customer-interest-field"><legend>Interesse principal</legend><div class="customer-interest-options">@foreach(var value in CustomerRules.Interests){var icon=value switch{"Compra"=>"⌂","Locação"=>"⌁","Temporada"=>"◷",_=>"◇"};<label class="customer-interest-option"><input type="radio" asp-for="Input.Interest" id="interest-@CustomerRules.Interests.ToList().IndexOf(value)" value="@value" required/><span class="customer-interest-card"><span class="customer-interest-icon" aria-hidden="true">@icon</span><span>@value</span></span></label>}</div></fieldset>
+                <label class="form-field">Responsável comercial *<select asp-for="Input.ResponsibleSubject" required><option value="">Selecione</option>@foreach(var candidate in Model.Candidates){<option value="@candidate.Subject">@candidate.DisplayName</option>}</select></label>
+                <label class="form-field">CPF/CNPJ (opcional)<input asp-for="Input.Document" maxlength="18" inputmode="numeric"/></label>
+                <label class="form-field">Observações iniciais<textarea asp-for="Input.Notes" maxlength="4000"></textarea></label></div>
+                <p class="muted">Informe pelo menos telefone ou e-mail. A documentação pode ser complementada depois.</p>
+                @if(Model.PossibleDuplicate){<label class="duplicate-confirmation"><input asp-for="AcknowledgeDuplicates"/> Conferi os contatos e confirmo que este cadastro corresponde a outra pessoa.</label>}
+                <button class="button primary" type="submit">Salvar cliente</button></form>
+            }else{<dl><dt>Nome</dt><dd>@data.Name</dd><dt>Tipo de pessoa</dt><dd>@data.PersonType</dd><dt>Telefone/WhatsApp</dt><dd>@(data.Phone??"Não informado")</dd><dt>E-mail</dt><dd>@(data.Email??"Não informado")</dd><dt>Origem</dt><dd>@data.Origin</dd><dt>Interesse</dt><dd>@data.Interest</dd><dt>Responsável</dt><dd>@Model.ResponsibleDisplayName</dd><dt>CPF/CNPJ</dt><dd>@(data.Document??"Não informado")</dd><dt>Observações iniciais</dt><dd>@(data.Notes??"Nenhuma")</dd></dl>}
+        </section>
+    }
+}
+@if(Model.IsNew&&Model.CanSave){
+    <details id="customer-data" class="card form-card customer-panel" open>
+        <summary>Dados do cliente</summary>
+        <form method="post"><input type="hidden" name="Panel" value="data"/><input type="hidden" asp-for="Version"/><div class="form-grid">
+            <label class="form-field">Nome do cliente *<input asp-for="Input.Name" maxlength="200" required autocomplete="name"/></label>
+            <label class="form-field">Tipo de pessoa<select asp-for="Input.PersonType"><option>Física</option><option>Jurídica</option></select></label>
+            <label class="form-field">Telefone/WhatsApp<input asp-for="Input.Phone" maxlength="30" type="tel" autocomplete="tel"/></label>
+            <label class="form-field">E-mail<input asp-for="Input.Email" maxlength="254" type="email" autocomplete="email"/></label>
+            <label class="form-field">Origem do contato<select asp-for="Input.Origin">@foreach(var value in CustomerRules.Origins){<option>@value</option>}</select></label>
+            <fieldset class="customer-interest-field"><legend>Interesse principal</legend><div class="customer-interest-options">@foreach(var value in CustomerRules.Interests){var icon=value switch{"Compra"=>"⌂","Locação"=>"⌁","Temporada"=>"◷",_=>"◇"};<label class="customer-interest-option"><input type="radio" asp-for="Input.Interest" id="interest-new-@CustomerRules.Interests.ToList().IndexOf(value)" value="@value" required/><span class="customer-interest-card"><span class="customer-interest-icon" aria-hidden="true">@icon</span><span>@value</span></span></label>}</div></fieldset>
+            <label class="form-field">Responsável comercial *<select asp-for="Input.ResponsibleSubject" required><option value="">Selecione</option>@foreach(var candidate in Model.Candidates){<option value="@candidate.Subject">@candidate.DisplayName</option>}</select></label>
+            <label class="form-field">CPF/CNPJ (opcional)<input asp-for="Input.Document" maxlength="18" inputmode="numeric"/></label>
+            <label class="form-field">Observações iniciais<textarea asp-for="Input.Notes" maxlength="4000"></textarea></label></div>
+            <p class="muted">Informe pelo menos telefone ou e-mail. A documentação pode ser complementada depois.</p>
+            @if(Model.PossibleDuplicate){<label class="duplicate-confirmation"><input asp-for="AcknowledgeDuplicates"/> Conferi os contatos e confirmo que este cadastro corresponde a outra pessoa.</label>}
+            <button class="button primary" type="submit">Salvar cliente</button></form>
+    </details>
+}

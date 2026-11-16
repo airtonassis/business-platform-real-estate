@@ -1,0 +1,9 @@
+/* Scoped composition using existing AraIa tokens/components; no changes to approved screens. */
+.announcement-card{max-width:100%;margin-bottom:20px}
+.announcement-card h2{margin-bottom:12px}
+.announcement-card p{margin-bottom:12px;overflow-wrap:anywhere}
+.announcement-card>form{margin-top:16px}
+.announcement-card .form-field textarea{width:100%;min-height:88px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:white;color:var(--text);resize:vertical}
+.announcement-card .form-field textarea:disabled{background:var(--surface-muted);color:var(--text-muted)}
+.announcement-breadcrumb{margin-bottom:20px;line-height:2;overflow-wrap:normal}
+.announcement-card>.form-field{margin-bottom:18px}.announcement-card fieldset+.form-actions{margin-top:24px}

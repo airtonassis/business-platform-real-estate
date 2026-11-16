@@ -1,0 +1,12 @@
+@model RealEstate.Web.Pages.PropertyModel
+<dialog id="shared-profile-dialog" class="card" aria-labelledby="shared-profile-title"><form id="shared-profile-form">
+<h2 id="shared-profile-title">Editar cadastro compartilhado</h2><p>As alterações deste cadastro serão usadas pelos imóveis vinculados. O vínculo de cada imóvel permanece o mesmo.</p>
+<label>Nome<input name="name" maxlength="200" required/></label>
+<div data-profile-owner><label>Pessoa<select name="personKind"><option value="">Não informado (legado)</option><option>PF</option><option>PJ</option></select></label><label>CPF / CNPJ<input name="taxId" maxlength="18" autocomplete="off"/></label><partial name="_OwnerContactFields"/></div>
+<div data-profile-condominium><div class="form-grid"><label>Tipo<select name="kind"><option value="residential">Residencial</option><option value="commercial">Comercial</option><option value="mixed">Misto</option><option value="other">Outro</option></select></label><label>Torres<input name="towers" type="number" min="0" max="100000" step="1"/></label><label>Pavimentos<input name="floors" type="number" min="0" max="100000" step="1"/></label><label>Observações<textarea name="notes" maxlength="2000"></textarea></label></div>
+@foreach(var group in CaptureCatalog.Groups.Where(g=>g.Category==11)){
+<fieldset class="capture-group" data-shared-group="@group.Id"><legend>@group.Label</legend><div class="capture-choices" data-shared-choices>
+@foreach(var option in group.Options){<label class="capture-chip" data-shared-choice="@option.Id"><input type="checkbox" value="@option.Id"/><span>@option.Label</span><input data-shared-detail aria-label="Detalhes de @option.Label" maxlength="2000"/></label>}
+</div><button type="button" class="button secondary" data-shared-other>+ Outros</button><div data-shared-new hidden><label>Nova opção<input maxlength="100" data-shared-label/></label><button type="button" class="button secondary" data-shared-add>Adicionar</button></div></fieldset>}
+</div>
+<details><summary>Histórico</summary><div data-profile-history></div></details><p role="status" aria-live="polite"></p><div class="form-actions"><button type="button" class="button secondary" data-shared-cancel>Cancelar</button><button type="submit" class="button primary">Salvar cadastro compartilhado</button></div></form></dialog>

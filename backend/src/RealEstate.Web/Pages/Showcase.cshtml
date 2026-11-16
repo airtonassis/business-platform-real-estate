@@ -1,0 +1,35 @@
+@page "/showcase"
+@model RealEstate.Web.Pages.ShowcaseModel
+@using RealEstate.Domain
+@{ ViewData["Title"] = "Vitrine Digital"; }
+<div class="page-heading"><div><p class="eyebrow">Imob · Apresentação comercial</p><h1>Vitrine Digital</h1><p class="muted">Selecione imóveis e controle quais informações podem ser apresentadas.</p></div></div>
+@if (Model.Error is not null) { <div class="card status-panel error" role="alert">@Model.Error</div> }
+@if (Model.Items is {} listing) {
+    <section aria-label="Seleção comercial de imóveis">
+        <div class="showcase-list-heading"><h2>Imóveis da carteira</h2><p class="muted">Seleção e autorização internas ao Imob.</p></div>
+        <div class="showcase-list">
+        @foreach (var card in Model.Cards) {
+            var property = card.Property;
+            <article class="card showcase-card">
+                @if (card.CoverId is {} cover) {
+                    <img class="showcase-card-photo" src="/properties/@property.Id?handler=Content&amp;mediaId=@cover" alt="Foto autorizada do imóvel" loading="lazy" />
+                } else {
+                    <div class="showcase-card-empty" aria-label="Sem fotografia autorizada"><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#image"/></svg><span>Sem fotografia autorizada</span></div>
+                }
+                <div class="showcase-card-body">
+                    <span class="showcase-status">@PropertyLifecycle.Label(property.Status)</span>
+                    <h3>@(card.Shows("title") && !string.IsNullOrWhiteSpace(property.Data.Title) ? property.Data.Title : "Imóvel em preparação")</h3>
+                    @if (card.Shows("commercialCode") && !string.IsNullOrWhiteSpace(property.CommercialCode)) { <p class="showcase-card-code">@property.CommercialCode</p> }
+                    @if (card.Shows("purpose") && !string.IsNullOrWhiteSpace(property.Data.Purpose)) { <p>@property.Data.Purpose</p> }
+                    @if (card.Shows("price")) { @foreach (var price in card.Prices) { <p class="showcase-card-price">@price.Purpose · <strong>@RealEstate.Web.Brl.Currency(price.Amount)</strong></p> } }
+                    @if (!string.IsNullOrWhiteSpace(card.Location)) { <p class="showcase-card-location"><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#pin"/></svg>@card.Location</p> }
+                    @if (ShowcaseRules.CanPrepare(property.Status)) { <a class="button secondary showcase-card-open" href="/showcase/@property.Id">Abrir Vitrine</a> }
+                    else { <span class="muted">Aguardando liberação comercial</span> }
+                </div>
+            </article>
+        }
+        </div>
+        <nav class="showcase-pagination" aria-label="Páginas da seleção comercial">@if (Model.PageNumber > 1) { <a class="button secondary small" href="/showcase?PageNumber=@(Model.PageNumber - 1)">Anterior</a> } <span>Página @Model.PageNumber de @((listing.Total + PropertyListQuery.PageSize - 1) / PropertyListQuery.PageSize)</span> @if ((long)Model.PageNumber * PropertyListQuery.PageSize < listing.Total) { <a class="button secondary small" href="/showcase?PageNumber=@(Model.PageNumber + 1)">Próxima</a> }</nav>
+    </section>
+}
+<link rel="stylesheet" href="/showcase.css" />

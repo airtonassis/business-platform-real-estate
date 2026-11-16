@@ -1,0 +1,5 @@
+@model string
+@inject RealEstate.Domain.ICoreAccess Access
+@if(Guid.TryParse(Model,out var property)&&((await Access.RequireAsync("properties","PROPERTY_COMMERCIAL_HISTORY_READ",Context.RequestAborted)).IsSuccess||(await Access.RequireAsync("properties","PROPERTY_COMMERCIAL_SUMMARY_READ",Context.RequestAborted)).IsSuccess)){
+<a class="button secondary" href="/commercial/properties/@property#property-commercial-history">Histórico comercial do imóvel</a>
+}

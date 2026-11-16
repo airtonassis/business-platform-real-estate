@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "productKey": "real-estate",
+  "name": "ERP Imobiliário",
+  "catalogVersion": 12,
+  "corePublicationStatus": "PENDING_AUTHORIZED_INGESTION",
+  "resources": [
+    {
+      "resourceKey": "properties",
+      "name": "Imóveis",
+      "permissions": [
+        {
+          "permissionKey": "CAPTURE_RESPONSIBLE",
+          "name": "Ser designado responsável pela captação"
+        },
+        {
+          "permissionKey": "PROPERTY_READ",
+          "name": "Consultar imóveis"
+        },
+        {
+          "permissionKey": "PROPERTY_CREATE",
+          "name": "Cadastrar imóvel em rascunho"
+        },
+        {
+          "permissionKey": "PROPERTY_UPDATE",
+          "name": "Editar imóvel em rascunho"
+        },
+        {
+          "permissionKey": "PROPERTY_APPROVE",
+          "name": "Aprovar imóvel em revisão para carteira comercial"
+        }
+      ]
+    },
+    {
+      "resourceKey": "owners",
+      "name": "Proprietário do imóvel — cadastro mínimo",
+      "permissions": [
+        {
+          "permissionKey": "OWNER_CREATE",
+          "name": "Cadastrar proprietário"
+        },
+        {
+          "permissionKey": "OWNER_UPDATE",
+          "name": "Editar cadastro compartilhado de proprietário"
+        }
+      ]
+    },
+    {
+      "resourceKey": "condominiums",
+      "name": "Condomínios compartilhados",
+      "permissions": [
+        {
+          "permissionKey": "CONDOMINIUM_UPDATE",
+          "name": "Editar condomínio e características compartilhadas"
+        }
+      ]
+    },
+    {
+      "resourceKey": "commercial-policies",
+      "name": "Políticas comerciais de captação",
+      "permissions": [
+        {
+          "permissionKey": "POLICY_READ",
+          "name": "Consultar políticas"
+        },
+        {
+          "permissionKey": "POLICY_EDIT",
+          "name": "Propor e editar revisão em rascunho"
+        },
+        {
+          "permissionKey": "POLICY_APPROVE",
+          "name": "Aprovar revisão comercial como gestor"
+        },
+        {
+          "permissionKey": "POLICY_APPLY",
+          "name": "Aplicar revisão aprovada no imóvel"
+        }
+      ]
+    },
+    {
+      "resourceKey": "negotiations",
+      "name": "Negociações comerciais",
+      "permissions": [
+        {"permissionKey": "NEGOTIATION_VIEW", "name": "Consultar negociações comerciais"},
+        {"permissionKey": "NEGOTIATION_CREATE", "name": "Iniciar negociação comercial"},
+        {"permissionKey": "NEGOTIATION_MANAGE", "name": "Transferir responsabilidade de negociações comerciais"}
+      ]
+    },
+    {
+      "resourceKey": "customers",
+      "name": "Clientes e Atendimentos",
+      "permissions": [
+        {
+          "permissionKey": "CUSTOMER_READ",
+          "name": "Consultar clientes e atendimentos"
+        },
+        {
+          "permissionKey": "CUSTOMER_CREATE",
+          "name": "Cadastrar cliente"
+        },
+        {
+          "permissionKey": "CUSTOMER_UPDATE",
+          "name": "Editar cadastro de cliente"
+        },
+        {
+          "permissionKey": "CUSTOMER_CONTACT_CREATE",
+          "name": "Registrar atendimento"
+        },
+        {
+          "permissionKey": "CUSTOMER_RESPONSIBLE",
+          "name": "Ser responsável comercial pelo cliente"
+        },
+        {
+          "permissionKey": "CUSTOMER_PROPERTY_WRITE",
+          "name": "Apresentar imóvel ao cliente e registrar retorno individual"
+        }
+      ]
+    }
+  ],
+  "licensesIssued": 0
+}

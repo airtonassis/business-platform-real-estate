@@ -1,0 +1,6 @@
+@model RealEstate.Web.Pages.PropertyModel
+@using System.Globalization
+@if(Model.Input.Capture?.Policy is {} binding){<input type="hidden" name="Input.Capture.Policy.RevisionId" value="@binding.RevisionId"/><input type="hidden" name="Input.Capture.Policy.Version" value="@binding.Version"/>}
+@if(Model.Input.Capture?.Fees.Allocations is {} items){for(var i=0;i<items.Count;i++){var a=items[i];var prefix=$"Input.Capture.Fees.Allocations[{i}]";
+<input type="hidden" name="@(prefix).Operation" value="@a.Operation"/><input type="hidden" name="@(prefix).ParticipantKind" value="@a.ParticipantKind"/><input type="hidden" name="@(prefix).RoleLabel" value="@a.RoleLabel"/><input type="hidden" name="@(prefix).Percent" value="@a.Percent?.ToString(CultureInfo.InvariantCulture)"/><input type="hidden" name="@(prefix).Amount" value="@a.Amount?.ToString(CultureInfo.InvariantCulture)"/><input type="hidden" name="@(prefix).BaseDescription" value="@a.BaseDescription"/>
+}}

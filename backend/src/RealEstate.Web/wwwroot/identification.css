@@ -1,0 +1,85 @@
+﻿/* Local CAD-1B treatment; other forms and institutional shell retain their styles. */
+#property-form{--cad-accent:#3038d8;--cad-soft:#f0efff;--cad-line:var(--border,#dbe2ef);max-width:none;padding:0;background:transparent;border:0;box-shadow:none}
+.cad-workspace{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+.cad-categories{padding:16px 12px;border:1px solid var(--cad-line);border-radius:16px;background:var(--surface,#fff)}
+.cad-nav-title{margin:4px 12px 14px;font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase}
+.cad-categories ol{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.cad-categories a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;font-size:12px;line-height:1.4;color:var(--text);text-decoration:none}
+.cad-categories a:hover{background:var(--cad-soft)}
+.cad-categories a.cad-current{background:var(--cad-accent);color:#fff;font-weight:650;box-shadow:0 4px 12px #3038d826}
+.cad-step-number{flex:0 0 26px;height:26px;display:grid;place-items:center;border:1px solid var(--cad-line);border-radius:50%;font-size:11px}
+.cad-current .cad-step-number{background:#fff;color:var(--cad-accent);border-color:#fff}
+.cad-picker-label,#cad-category-picker{display:none}
+#property-form .property-fields{min-width:0;margin:0;padding:0;border:0}
+.cad-section{padding:26px;background:var(--surface,#fff);border:1px solid var(--cad-line);border-radius:16px;box-shadow:0 3px 14px #182b5010;margin-bottom:16px}
+.cad-section>summary{font-size:20px;line-height:1.4;font-weight:700;color:var(--text);padding-bottom:20px;cursor:pointer}
+.cad-enhanced .cad-section:not(.cad-active){display:none}
+.cad-enhanced .cad-section>summary{list-style:none}
+.cad-enhanced .cad-section>summary::before{content:'⌂';display:inline-grid;place-items:center;width:40px;height:40px;margin-right:12px;background:var(--cad-soft);color:var(--cad-accent);border-radius:12px;vertical-align:middle;font-size:26px}
+#cad-1 .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 18px}
+#cad-1 .form-field:has([name="Input.Title"]){grid-column:span 2}
+#cad-1 .form-field:has([name="Input.Summary"]){grid-column:span 2;order:2}
+#cad-1 .form-field:has([name="Input.InternalReference"]){order:2}
+#cad-1 .form-field:has([name="Input.IsInCondominium"]){grid-column:auto;grid-row:auto}
+#cad-1 .form-field:first-child{display:flex;align-items:center;gap:8px;padding:0 0 16px;border-bottom:1px solid var(--cad-line);color:var(--text-muted);font-size:12px}
+#cad-1 .form-field:first-child p{margin:0;font-weight:600}
+#cad-1 .form-field:first-child small{display:none}
+#property-form .form-field label{display:block;margin-bottom:8px;font-weight:600;font-size:13px;color:var(--text)}
+#property-form .form-field input,#property-form .form-field select,#property-form .form-field textarea{border:1px solid var(--cad-line);border-radius:9px;padding:11px 12px;min-height:44px;font:inherit;font-size:14px;background:#fff;color:var(--text);width:100%;box-sizing:border-box}
+#property-form .form-field input[readonly]{background:#f4f6fa;color:var(--text-muted);font-size:12px}
+#property-form .form-field textarea{resize:vertical;min-height:110px}
+#property-form :is(input,select,textarea):focus-visible,.cad-categories a:focus-visible{outline:3px solid #8585ef66;outline-offset:2px;border-color:var(--cad-accent)}
+#adaptive-status{order:3;margin:0;padding:13px 16px;border-radius:10px;color:#44369a;background:var(--cad-soft);font-size:13px;line-height:1.5}
+.cad-save-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:8px;padding:20px 24px;background:var(--surface,#fff);border:1px solid var(--cad-line);border-radius:14px}
+.cad-save-bar .form-hint{font-size:12px;margin:0}
+.cad-save-bar .button{min-height:44px;border-radius:9px;padding:11px 18px;font-weight:600}
+.cad-save-bar .button.primary{background:var(--cad-accent);border-color:var(--cad-accent);color:#fff;gap:16px}
+.cad-save-bar button.secondary{color:var(--cad-accent);border-color:var(--cad-accent)}
+.cad-location-tools{padding:0 24px 12px;font-size:12px}
+#property-form [hidden]{display:none!important}
+@media(max-width:1100px){.cad-workspace{grid-template-columns:210px minmax(0,1fr);gap:16px}#cad-1 .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#cad-1 .form-field:has([name="Input.IsInCondominium"]){grid-column:auto;grid-row:auto}#cad-1 .form-field:has([name="Input.Title"]),#cad-1 .form-field:has([name="Input.Summary"]){grid-column:1/-1}}
+@media(max-width:760px){.cad-workspace{grid-template-columns:minmax(0,1fr);gap:16px}.cad-categories{padding:16px}.cad-enhanced .cad-categories ol,.cad-nav-title{display:none}.cad-picker-label{display:block;font-size:12px;font-weight:600;margin-bottom:8px}#cad-category-picker{display:block;width:100%;min-height:46px;border:1px solid var(--cad-line);border-radius:9px;padding:10px;background:var(--cad-soft);color:var(--cad-accent);font-size:14px;font-weight:600}.cad-section{padding:20px 16px}.cad-section>summary{font-size:18px}#cad-1 .form-grid{grid-template-columns:minmax(0,1fr);gap:18px}#cad-1 .form-field:has([name="Input.Title"]),#cad-1 .form-field:has([name="Input.Summary"]){grid-column:auto}#property-form .form-field :is(input,select,textarea){font-size:16px}.cad-save-bar{flex-direction:column;align-items:stretch;padding:16px;position:sticky;bottom:8px;z-index:2;box-shadow:0 4px 22px #182b5020}.cad-save-bar .form-actions{flex-wrap:wrap;gap:8px}.cad-save-bar .button{flex:1;text-align:center;font-size:13px;white-space:nowrap}}
+.cad-draft{display:inline-block;vertical-align:middle;margin-left:10px;padding:6px 12px;border-radius:20px;background:#eae4ff;color:#4a2ba8;font-size:12px;font-weight:600;letter-spacing:0}.cad-section summary:focus-visible{outline:3px solid #8585ef66;outline-offset:4px;border-radius:8px}
+.cad-save-bar .form-actions{margin:0;padding:0;border:0;flex-wrap:nowrap;align-items:center}
+@media(max-width:760px){.cad-save-bar{gap:10px;padding:12px}.cad-save-bar .form-actions .button{padding:10px 8px;font-size:12px;min-width:0}.cad-save-bar .form-actions a{flex:0 0 auto}.cad-save-bar .form-hint{font-size:11px}}
+#workspace-content:has(#property-form) .page-heading .form-actions{margin:0;padding:0;border:0}
+@media(max-width:760px){#workspace-content:has(#property-form) .page-heading{gap:16px;margin-bottom:20px}#workspace-content:has(#property-form) .page-heading h1{font-size:24px;line-height:1.35}.cad-draft{margin-left:0}}
+.cad-icon{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cad-categories a{font-size:13px;padding:8px 10px;gap:10px}
+.cad-nav-copy{min-width:0;line-height:1.35}
+.cad-nav-copy small{display:block;font-size:10px;font-weight:400;opacity:.7;margin-top:3px}
+.cad-section>summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cad-enhanced .cad-section>summary::before{display:none}
+.cad-section>summary>.cad-icon{width:38px;height:38px;flex-basis:38px;padding:8px;box-sizing:border-box;border-radius:10px;background:var(--cad-soft);color:var(--cad-accent)}
+.cad-availability{margin-left:auto;background:#f3f5f9;color:var(--text-muted);border:1px solid var(--cad-line);border-radius:20px;padding:4px 9px;font-size:10px;font-weight:500}
+.cad-nav-hint,.cad-inapplicable{font-size:11px;color:var(--text-muted);line-height:1.6;margin:16px 10px 0}
+.cad-inapplicable summary{cursor:pointer;font-weight:600}
+.cad-inapplicable ul{padding-left:16px;margin-top:8px}.cad-inapplicable li{margin:8px 0}
+.cad-property-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;margin:-8px 0 20px;font-size:13px;color:var(--text-muted)}
+.cad-property-summary strong{color:var(--text)}
+.cad-property-summary span:not(:empty)::before{content:'·';padding-right:12px;color:#a4acc0}
+.cad-product{font-weight:700;color:var(--cad-accent,#3038d8)}
+.cad-postal-feedback:has(#cep-status:empty){display:none}
+.cad-postal-feedback #cep-status{margin:0;font-size:13px}
+.cad-postal-feedback #cep-retry{margin-top:10px}
+@media(max-width:760px){.cad-property-summary{font-size:12px;gap:6px 12px}.cad-availability{margin-left:0}.cad-save-bar .form-actions:has([data-cad-back]:not([hidden]))>a{display:none}.cad-section>summary{font-size:17px}}
+
+/* Human validation v3: compact content; institutional shell unchanged. */
+#property-form .cad-section{padding:18px;margin-bottom:12px}
+#property-form .cad-section>summary{padding-bottom:14px;font-size:18px}
+#property-form .form-grid,#cad-1 .form-grid{gap:12px 16px}
+#cad-1 .form-field:has([name="Input.Summary"]),#cad-1 .form-field:has([name="Input.InternalReference"]){order:0}
+#property-form .form-field label{margin-bottom:5px}
+#property-form :is(input:not([type=checkbox]):not([type=hidden]),select){min-height:40px}
+#property-form textarea{min-height:70px}
+#property-form .capture-group{padding:12px;margin-block:4px}
+#property-form .capture-group>p{margin-block:8px}
+#property-form .compact-choices{display:flex;flex-wrap:wrap;gap:6px}
+.compact-choices button{border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:var(--surface,#fff);color:var(--text);font:inherit;cursor:pointer}
+.compact-choices [aria-checked=true]{background:var(--cad-soft);border-color:var(--cad-accent);color:var(--cad-accent);font-weight:600}
+.compact-choices button:focus-visible{outline:3px solid var(--cad-accent);outline-offset:2px}
+@media(min-width:1200px){#property-form .cad-section:not(#cad-1)>.form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){#property-form .cad-section{padding:14px 12px}#property-form .form-grid{grid-template-columns:minmax(0,1fr)}#property-form .compact-choices button{min-height:44px}#cad-1 .form-field:has([name="Input.Summary"]){grid-column:1/-1}}
+
+#property-form .capture-topic{font-size:14px;margin:10px 0 0;padding-bottom:8px;border-bottom:1px solid var(--cad-line)}
+@media(max-width:760px){#property-form .cad-save-bar{position:static}}

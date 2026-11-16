@@ -1,0 +1,92 @@
+@model RealEstate.Web.CaptureEditorModel
+@using System.Globalization
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+var capture=Model.Page.Input.Capture??new CaptureData();
+object? Read(string path){object? current=capture;foreach(var part in path.Split('.'))current=current?.GetType().GetProperty(part)?.GetValue(current);return current;}
+}
+@foreach(var f in RealEstate.Web.CaptureFields.All.Where(f=>f.Category==Model.Category)){
+    var name="Input.Capture."+f.Path;var value=Read(f.Path);var id=Html.Id(name);
+    if(Model.Category==9){
+        <details class="form-field full"><summary>Observações da vistoria (opcional)</summary><label class="sr-only" for="@id">@f.Label</label>@Html.TextArea(name,value?.ToString(),3,30,new {maxlength=2000})</details>
+        continue;
+    }
+    @if(Model.Category==6&&f.Path is "Values.Sale.Authorized" or "Values.Rental.Authorized" or "Values.Seasonal.Authorized" or "Values.PropertyTax"){
+        <h3 class="form-field full capture-topic" data-capture-when="@f.When" hidden="@(!CaptureAdaptation.Applies(f.When,Model.Page.Input))">@(f.Path switch{"Values.Sale.Authorized"=>"Venda","Values.Rental.Authorized"=>"Locação","Values.Seasonal.Authorized"=>"Temporada",_=>"Encargos do imóvel"})</h3>
+    }
+    @if(Model.Category==3&&f.Path is "Areas.Private" or "Areas.Usable" or "Areas.Land"){
+        @Html.Hidden(name,value is IFormattable legacy?legacy.ToString(null,CultureInfo.InvariantCulture):value)
+        continue;
+    }
+    @if(Model.Category==12&&f.Path is "Fees.SalePercent" or "Fees.RentalPercent" or "Fees.AdministrationPercent" or "Fees.InternalAmount"){
+        <h3 class="form-field full capture-topic" data-capture-when="@f.When">@(f.Path switch{"Fees.SalePercent"=>"Venda — comissão prevista","Fees.RentalPercent"=>"Locação — comissão prevista","Fees.AdministrationPercent"=>"Administração — condições previstas",_=>"Taxas e observações internas"})</h3>
+    }
+    <div class="form-field @(f.Kind=="textarea"?"full":"")" data-capture-when="@f.When" hidden="@(!CaptureAdaptation.Applies(f.When,Model.Page.Input))"><label for="@id">@f.Label</label>
+    @if(f.Kind is "select" or "nullable-bool" or "bool"){
+        var pairs=(f.Kind is "nullable-bool" or "bool"?"true|Sim;false|Não":f.Options??"").Split(';',StringSplitOptions.RemoveEmptyEntries);
+        var items=new List<SelectListItem>{new("Não informado","")};
+        if(f.Path=="Acquisition.ResponsibleSubject"){
+            foreach(var person in Model.Page.ResponsibleCandidates)items.Add(new(person.DisplayName,person.Subject,value?.ToString()==person.Subject));
+            if(value is string assigned&&!Model.Page.ResponsibleCandidates.Any(p=>p.Subject==assigned))items.Add(new("Responsável já vinculado",assigned,true));
+        }
+        foreach(var pair in pairs){var parts=pair.Split('|');items.Add(new(parts[1],parts[0],string.Equals(value?.ToString(),parts[0],StringComparison.OrdinalIgnoreCase)));}
+        if(f.Kind=="bool")items=items.Where(i=>i.Value!="").ToList();
+        @Html.DropDownList(name,items,new {@class="capture-select"})
+        @if(f.Path=="Acquisition.ResponsibleSubject"){
+            @if(Model.Page.DirectoryUnavailable){<small>A lista de responsáveis não está disponível para este acesso. O vínculo atual será preservado.</small>}
+            @if(Model.Page.SuggestedResponsible is {} suggested){<small>Sugestão: @suggested.DisplayName (seu usuário autorizado).</small><button type="button" class="button secondary" data-use-responsible="@suggested.Subject">Usar meu usuário</button>}
+        }
+    }else if(f.Kind=="textarea"){@Html.TextArea(name,value?.ToString(),3,30,new {maxlength=2000})}
+    else if(f.Kind=="date"){@Html.TextBox(name,value is DateOnly date?date.ToString("yyyy-MM-dd"):null,new {type="date"})}
+    else if(f.Kind=="money"){<brl-input name="@name" id="@id" value="@((decimal?)value)"/>}
+    else if(f.Kind is "number" or "percent" or "count"){@Html.TextBox(name,value is IFormattable number?number.ToString(null,CultureInfo.InvariantCulture):null,new {type="number",step=f.Kind=="count"?"1":f.Kind=="percent"?"0.01":"any",min="0"})}
+    else{@Html.TextBox(name,value,new {maxlength=2000})}
+    </div>
+}
+@foreach(var group in CaptureCatalog.Groups.Where(g=>g.Category==Model.Category)){
+<fieldset class="capture-group form-field full" data-choice-group="@group.Id" data-capture-when="@group.Applicability" hidden="@(!CaptureAdaptation.Applies(group.Applicability,Model.Page.Input))"><legend>@group.Label</legend>@if(group.Category==11){<p class="muted">Características coletivas — condomínio e exceções deste imóvel.</p>}else if(group.Category is 4 or 5 or 10){<p class="muted">Características privativas deste imóvel.</p>}<div class="capture-choices">
+@for(var i=0;i<capture.Selections.Count;i++){
+    var choice=capture.Selections[i];if(choice.GroupId!=group.Id){continue;}var prefix=$"Input.Capture.Selections[{i}]";
+    <div class="capture-choice" data-choice="@choice.OptionId">
+    <input type="hidden" name="@(prefix).GroupId" value="@choice.GroupId"/><input type="hidden" name="@(prefix).OptionId" value="@choice.OptionId"/><input type="hidden" name="@(prefix).Label" value="@choice.Label"/>
+    <label class="capture-chip"><input type="checkbox" name="@(prefix).Selected" value="true" checked="@choice.Selected"/><span>@choice.Label</span></label>
+    @if(group.Category==11){<label class="capture-inheritance">@choice.Label — exceção no imóvel<select name="@(prefix).SharedOverride"><option value="">Herdar / preservar seleção local</option><option value="true" selected="@(choice.SharedOverride==true)">Incluir neste imóvel</option><option value="false" selected="@(choice.SharedOverride==false)">Excluir deste imóvel</option></select><small data-inherited-state></small><small data-inherited-detail></small></label>}
+    <input type="hidden" name="@(prefix).Selected" value="false"/>
+    <div class="capture-choice-detail" hidden="@(!choice.Selected)"><label>Detalhes de @choice.Label<textarea name="@(prefix).Detail" maxlength="2000" rows="2">@choice.Detail</textarea></label>
+    @if(group.Category==10){
+        <label>Quantidade<input type="number" min="0" step="1" name="@(prefix).Quantity" value="@choice.Quantity"/></label>
+        <label>Conservação / observações<textarea name="@(prefix).Condition" maxlength="2000" rows="2">@choice.Condition</textarea></label>
+        <label>Inclusão na negociação<select name="@(prefix).Inclusion"><option value="">Não informada</option><option value="included" selected="@(choice.Inclusion=="included")">Incluído</option><option value="excluded" selected="@(choice.Inclusion=="excluded")">Não incluído</option><option value="negotiable" selected="@(choice.Inclusion=="negotiable")">A negociar</option></select></label>
+        <label>Foto vinculada<select name="@(prefix).PhotoId"><option value="">Sem foto</option>@foreach(var photo in Model.Page.Gallery?.Items.Where(m=>m.Kind=="image")??[]){<option value="@photo.Id" selected="@(choice.PhotoId==photo.Id)">@photo.Name</option>}</select></label>
+    }
+    </div></div>
+}
+</div><button type="button" class="button secondary" data-choice-add>+ Outros</button><div data-choice-new hidden><label>Nova opção de @group.Label<input maxlength="100" data-choice-label/></label><button type="button" class="button secondary" data-choice-confirm>Adicionar opção</button><p role="status" data-choice-message></p></div></fieldset>
+}
+@if(Model.Category==3){
+    <p class="muted form-field full">Frente, fundos e laterais em metros. A área do terreno é informada, sem cálculo automático pelas medidas. Áreas na unidade indicada, sem conversão automática.</p>
+    @if(capture.Areas.Private is not null||capture.Areas.Usable is not null||capture.Areas.Land is not null){
+        <details class="form-field full"><summary>Valores anteriores preservados</summary><p class="muted">Os conceitos anteriores permanecem independentes no registro. Nenhum valor é copiado ou recalculado automaticamente.</p>
+        @foreach(var f in RealEstate.Web.CaptureFields.All.Where(f=>f.Category==3&&f.Path is "Areas.Private" or "Areas.Usable" or "Areas.Land")){var prior=Read(f.Path);if(prior is not null){<p>@f.Label: @prior</p>}}
+        </details>
+    }
+}
+@if(Model.Category==6){
+    @Html.Hidden("Input.Capture.Values.Conditions",capture.Values.Conditions)
+    @Html.Hidden("Input.Capture.Values.Negotiable",capture.Values.Negotiable?.ToString().ToLowerInvariant())
+    @if(capture.Values.Conditions is not null||capture.Values.Negotiable is not null){<details class="form-field full"><summary>Condições anteriores sem modalidade</summary><p>Informações preservadas, sem classificação automática como venda ou locação.</p><p>@capture.Values.Conditions</p><p>Negociável: @(capture.Values.Negotiable is true?"Sim":capture.Values.Negotiable is false?"Não":"Não informado")</p></details>}
+    <p class="form-field full muted" data-capture-when="rental" hidden="@(!CaptureAdaptation.Applies("rental",Model.Page.Input))">As garantias aceitas ficam na categoria própria. Política sugerida, condições da captação e garantia contratada são etapas distintas.</p>
+    <p class="form-field full muted">Valores e condições de captação. Modalidades ocultas ficam preservadas e não compõem as condições ativas. Não representam negociação concluída ou obrigação financeira.</p>
+    <details class="form-field full"><summary>Histórico dos valores e condições</summary><p>Retratos dos dados armazenados, incluindo modalidades inativas. Não são uma oferta comercial vigente.</p>@foreach(var change in capture.PriceHistory.OrderByDescending(x=>x.Version)){<p>Versão @change.Version · @change.At.ToString("u") · @change.Actor · Venda R$ @RealEstate.Web.Brl.Format(change.Values.Sale.Authorized) · Locação R$ @RealEstate.Web.Brl.Format(change.Values.Rental.Authorized) · Temporada R$ @RealEstate.Web.Brl.Format(change.Values.Seasonal.Authorized)</p><p>Condições de venda: @change.Values.Sale.Conditions · Condições de locação: @change.Values.Rental.Conditions</p>}</details>
+}
+@if(Model.Category==13){<p class="muted form-field full">Modalidades aceitas pelo proprietário. Não representa contratação ou aprovação jurídica da garantia. “Sem garantia” exclui as demais modalidades.</p>}
+@if(Model.Category==9){
+@for(var i=0;i<capture.Media.Count;i++){
+var item=capture.Media[i];var prefix=$"Input.Capture.Media[{i}]";
+@Html.Hidden(prefix+".MediaId",item.MediaId)
+@Html.Hidden(prefix+".Room",item.Room)
+@Html.Hidden(prefix+".Differential",item.Differential)
+@Html.Hidden(prefix+".InternalNotes",item.InternalNotes)
+@Html.Hidden(prefix+".Visibility",item.Visibility)
+}
+}

@@ -1,0 +1,17 @@
+@model RealEstate.Domain.PropertyListQuery
+<div class="listing-search"><label for="search">Pesquisar imóveis</label><input asp-for="Search" id="search" data-server-search type="search" maxlength="200" placeholder="Código, título, localização…"/><button class="button primary" type="submit">Aplicar filtros</button><a class="button secondary" href="@(ViewData["ListingClearUrl"] as string ?? "/")">Limpar filtros</a></div>
+<details class="listing-filters"><summary>Filtros por coluna e ordenação</summary><div class="listing-grid">
+<div><label asp-for="Code">Código</label><input asp-for="Code" maxlength="200"/></div>
+<div><label asp-for="Title">Título</label><input asp-for="Title" maxlength="200"/></div>
+<div><label asp-for="Municipality">Cidade</label><input asp-for="Municipality" maxlength="200"/></div>
+<div><label asp-for="State">UF</label><select asp-for="State"><option value="">Todas</option>@foreach(var uf in RealEstate.Domain.StructuredAddressRules.States){<option>@uf</option>}</select></div>
+<div><label asp-for="Neighborhood">Bairro</label><input asp-for="Neighborhood" maxlength="200"/></div>
+<div><label asp-for="Category">Categoria</label><input asp-for="Category" maxlength="200"/></div>
+<div><label asp-for="Type">Tipo</label><select asp-for="Type"><option value="">Todos</option>@foreach(var type in RealEstate.Domain.PropertyRules.Types){<option>@type</option>}</select></div>
+<div><label asp-for="Purpose">Finalidade</label><select asp-for="Purpose"><option value="">Todas</option>@foreach(var purpose in RealEstate.Domain.PropertyRules.Purposes){<option>@purpose</option>}</select></div>
+<div><label asp-for="Status">Situação</label><select asp-for="Status"><option value="">Todas</option>@foreach(var status in RealEstate.Domain.PropertyLifecycle.Labels){<option value="@status.Key">@status.Value</option>}</select></div>
+<div><label for="Filter_MinPrice">Valor histórico mínimo (R$)</label><brl-input name="Filter.MinPrice" id="Filter_MinPrice" value="@Model.MinPrice"/></div>
+<div><label for="Filter_MaxPrice">Valor histórico máximo (R$)</label><brl-input name="Filter.MaxPrice" id="Filter_MaxPrice" value="@Model.MaxPrice"/></div>
+<div><label asp-for="Sort">Ordenar por</label><select asp-for="Sort"><option value="updated">Atualização</option><option value="code">Código</option><option value="title">Título</option><option value="municipality">Cidade</option><option value="state">UF</option><option value="neighborhood">Bairro</option><option value="category">Categoria</option><option value="type">Tipo</option><option value="purpose">Finalidade</option><option value="price">Valor histórico não classificado</option><option value="status">Situação</option></select></div>
+<div><label asp-for="Descending">Direção</label><select asp-for="Descending"><option value="false">Ascendente</option><option value="true">Descendente</option></select></div>
+</div></details>

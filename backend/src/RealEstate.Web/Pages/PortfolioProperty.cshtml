@@ -1,0 +1,79 @@
+@page "/portfolio/{id:guid}"
+@model RealEstate.Web.Pages.PortfolioPropertyModel
+@{ ViewData["Title"] = "Consulta do imóvel"; }
+<a href="/">← Imóveis</a>
+<div class="page-heading"><div><p class="eyebrow">Imóveis · Acompanhamento</p><h1>Consulta do imóvel</h1></div></div>
+@if (Model.Error is not null) { <section class="card status-panel error" role="alert"><p>@Model.Error</p></section> }
+@if (Model.Property is {} property) {
+    var data = property.Data;
+    var address = data.Address;
+    <section class="card form-card" aria-labelledby="portfolio-title">
+        <h2 id="portfolio-title">@(data.Title ?? "Rascunho sem título")</h2>
+        <p>@(property.CommercialCode ?? data.Code ?? "Código comercial pendente") · @(RealEstate.Domain.PropertyLifecycle.Label(property.Status))</p>
+        <dl>
+            <div><dt>Filial</dt><dd>@Model.EstablishmentName</dd></div>
+            @if (!string.IsNullOrWhiteSpace(data.Category)) { <div><dt>Categoria</dt><dd>@data.Category</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(data.Type)) { <div><dt>Tipo</dt><dd>@data.Type</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(data.Purpose)) { <div><dt>Finalidade original</dt><dd>@data.Purpose</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address?.Municipality)) { <div><dt>Cidade</dt><dd>@address.Municipality</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address?.State)) { <div><dt>UF</dt><dd>@address.State</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address?.Neighborhood)) { <div><dt>Bairro</dt><dd>@address.Neighborhood</dd></div> }
+        </dl>
+        @if (Model.CanEdit) { <a class="button secondary" href="/properties/@property.Id">Continuar captação</a> }
+        @if (Model.CanOpenShowcase) { <a class="button secondary" href="/showcase/@property.Id">Vitrine Digital</a> }
+        @if (Model.CanSubmit) { <form method="post" asp-page-handler="Submit"><input type="hidden" name="version" value="@property.Version"/><button class="button primary" type="submit">Enviar para revisão</button></form> }
+        @if (Model.CanApprove) { <form method="post" asp-page-handler="Approve"><input type="hidden" name="version" value="@property.Version"/><button class="button primary" type="submit">Aprovar imóvel</button></form> }
+    </section>
+    @if (!string.IsNullOrWhiteSpace(data.Summary)) {
+        <section class="card form-card" aria-labelledby="portfolio-description"><h2 id="portfolio-description">Descrição</h2><p>@data.Summary</p></section>
+    }
+    @if (address is not null && (address.Street is not null || address.LegacyText is not null || address.PostalCode is not null)) {
+        <section class="card form-card" aria-labelledby="portfolio-location"><h2 id="portfolio-location">Localização</h2><dl>
+            @if (!string.IsNullOrWhiteSpace(address.Street)) { <div><dt>Logradouro</dt><dd>@address.Street @(address.WithoutNumber == true ? "S/N" : address.Number)</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address.Complement)) { <div><dt>Complemento</dt><dd>@address.Complement</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address.LegacyText)) { <div><dt>Endereço informado</dt><dd>@address.LegacyText</dd></div> }
+            @if (!string.IsNullOrWhiteSpace(address.PostalCode)) { <div><dt>CEP</dt><dd>@address.PostalCode</dd></div> }
+        </dl></section>
+    }
+    @if (data.Capture is {} capture) {
+        var areas = capture.Areas;
+        var rooms = capture.Rooms;
+        @if (!string.IsNullOrWhiteSpace(capture.Acquisition.Origin) || capture.Acquisition.Date is not null) {
+            <section class="card form-card" aria-labelledby="portfolio-acquisition"><h2 id="portfolio-acquisition">Origem da captação</h2><dl>
+                @if (!string.IsNullOrWhiteSpace(capture.Acquisition.Origin)) { <div><dt>Origem informada</dt><dd>@capture.Acquisition.Origin</dd></div> }
+                @if (capture.Acquisition.Date is {} acquisitionDate) { <div><dt>Data informada</dt><dd>@acquisitionDate.ToString("dd/MM/yyyy")</dd></div> }
+            </dl></section>
+        }
+        @if (areas.Total is not null || areas.Built is not null || areas.Private is not null || areas.Usable is not null || areas.Land is not null ||
+             rooms.Bedrooms is not null || rooms.Suites is not null || rooms.Bathrooms is not null || rooms.Parking is not null) {
+            <section class="card form-card" aria-labelledby="portfolio-physical"><h2 id="portfolio-physical">Características</h2><dl>
+                @if (areas.Total is {} total) { <div><dt>Área total</dt><dd>@total @areas.Unit</dd></div> }
+                @if (areas.Built is {} built) { <div><dt>Área construída</dt><dd>@built @areas.Unit</dd></div> }
+                @if (areas.Private is {} privateArea) { <div><dt>Área privativa</dt><dd>@privateArea @areas.Unit</dd></div> }
+                @if (areas.Usable is {} usable) { <div><dt>Área útil</dt><dd>@usable @areas.Unit</dd></div> }
+                @if (areas.Land is {} land) { <div><dt>Área do terreno</dt><dd>@land @areas.Unit</dd></div> }
+                @if (rooms.Bedrooms is {} bedrooms) { <div><dt>Dormitórios</dt><dd>@bedrooms</dd></div> }
+                @if (rooms.Suites is {} suites) { <div><dt>Suítes</dt><dd>@suites</dd></div> }
+                @if (rooms.Bathrooms is {} bathrooms) { <div><dt>Banheiros</dt><dd>@bathrooms</dd></div> }
+                @if (rooms.Parking is {} parking) { <div><dt>Vagas</dt><dd>@parking</dd></div> }
+            </dl></section>
+        }
+        @if (RealEstate.Domain.CommercialValues.Active(data).Any()) {
+            <section class="card form-card" aria-labelledby="portfolio-values"><h2 id="portfolio-values">Valores informados na captação</h2>
+                <partial name="_CommercialValues" model="data" />
+                <p class="muted">Valores informados não representam aprovação ou publicação comercial.</p>
+            </section>
+        }
+    }
+    @if (Model.Gallery?.Items.Count > 0) {
+        <section class="card form-card" aria-labelledby="portfolio-media"><h2 id="portfolio-media">Galeria</h2>
+            <div class="media-grid">@foreach (var media in Model.Gallery.Items.OrderBy(m => m.Position)) {
+                <div class="media-card"><div class="media-preview">
+                    @if (media.Kind == "image") { <img src="/properties/@property.Id?handler=Content&amp;mediaId=@media.Id" alt="Imagem do imóvel: @media.Name" loading="lazy" /> }
+                    else if (media.Kind == "video") { <video controls preload="metadata" src="/properties/@property.Id?handler=Content&amp;mediaId=@media.Id" aria-label="Vídeo do imóvel: @media.Name"></video> }
+                </div><p class="media-name">@media.Name</p></div>
+            }</div>
+        </section>
+    }
+}
+<link rel="stylesheet" href="/media.css" />

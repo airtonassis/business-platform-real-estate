@@ -1,0 +1,30 @@
+@model RealEstate.Domain.StructuredAddress
+<div class="location-editor form-field full">
+<fieldset class="location-group"><legend>Endereço do imóvel</legend>
+<p class="muted" id="address-help">Preencha o que souber. O endereço pode ser completado depois.</p>
+<div class="form-grid location-address-grid">
+<div class="form-field"><label asp-for="PostalCode">CEP</label><input asp-for="PostalCode" inputmode="numeric" maxlength="9" pattern="[0-9]{5}-?[0-9]{3}" autocomplete="postal-code" aria-describedby="postal-help"/><small id="postal-help" class="muted">Consulta ViaCEP ao completar os oito dígitos.</small></div>
+<div class="form-field full cad-postal-feedback"><p id="cep-status" role="status" aria-live="polite" aria-atomic="true"></p><button id="cep-retry" class="button secondary" type="button" hidden>Tentar consulta novamente</button></div>
+<div class="form-field location-street"><label asp-for="Street">Logradouro</label><input asp-for="Street" maxlength="300" autocomplete="address-line1"/></div>
+<div class="form-field location-number"><label asp-for="Number">Número</label><input asp-for="Number" value="@(Model.WithoutNumber==true?"s/n":Model.Number)" maxlength="50" placeholder="Número ou s/n"/><input asp-for="WithoutNumber" type="hidden"/></div>
+<div class="form-field"><label asp-for="Complement">Complemento</label><input asp-for="Complement" maxlength="200" autocomplete="address-line2"/></div>
+<div class="form-field"><label asp-for="Neighborhood">Bairro</label><input asp-for="Neighborhood" maxlength="200" autocomplete="address-level3"/></div>
+<div class="form-field"><label asp-for="Municipality">Município</label><input asp-for="Municipality" maxlength="200" autocomplete="address-level2"/></div>
+<div class="form-field"><label asp-for="State">UF</label><select asp-for="State" autocomplete="address-level1"><option value="">Não informada</option>@foreach(var uf in RealEstate.Domain.StructuredAddressRules.States){<option value="@uf">@uf</option>}</select></div>
+<div class="form-field full"><label asp-for="LegacyText">Endereço livre / referência de acesso rural</label><input asp-for="LegacyText" maxlength="500" autocomplete="street-address" aria-describedby="address-help"/><small class="muted">Use para referências de acesso. O texto já registrado é preservado.</small></div>
+<div class="form-field"><label asp-for="MunicipalityIbgeCode">Código IBGE municipal (opcional)</label><input asp-for="MunicipalityIbgeCode" inputmode="numeric" maxlength="7" pattern="[0-9]{7}" aria-describedby="ibge-help"/><small id="ibge-help" class="muted">Sete dígitos. Confira a correspondência com o município e a UF.</small></div>
+</div></fieldset>
+<fieldset class="location-group location-point"><legend>Ponto geográfico</legend>
+<p class="muted">Informe as coordenadas do imóvel, se disponíveis. Elas não são obtidas automaticamente pelo CEP.</p>
+<div class="form-grid">
+<div class="form-field"><label asp-for="Latitude">Latitude (opcional)</label><input asp-for="Latitude" type="number" step="any" min="-90" max="90" aria-describedby="location-coordinate-status"/></div>
+<div class="form-field"><label asp-for="Longitude">Longitude (opcional)</label><input asp-for="Longitude" type="number" step="any" min="-180" max="180" aria-describedby="location-coordinate-status"/></div>
+<div class="form-field full"><label asp-for="CoordinateSource">Fonte das coordenadas (opcional)</label><input asp-for="CoordinateSource" maxlength="100"/><small class="muted">Informe como o ponto foi obtido.</small></div>
+</div>
+<p id="location-coordinate-status" class="location-coordinate-status" role="status" aria-live="polite">Coordenadas não informadas.</p>
+<div class="location-manual-tools"><label for="manual-point">Coordenadas ou link com o ponto</label><input id="manual-point" type="text" placeholder="-23.5505, -46.6333" autocomplete="off" aria-describedby="manual-point-help"/><small id="manual-point-help">Cole latitude e longitude ou um link completo do Google Maps que contenha coordenadas. Links encurtados e endereços sem coordenadas não são consultados.</small><div class="form-actions"><button type="button" class="button secondary" data-import-point>Usar coordenadas</button><button type="button" class="button secondary" data-confirm-point>Confirmar ponto informado</button></div></div>
+<div class="location-map-state" data-location-map-state><strong>Mapa interativo não configurado</strong><p>Você pode salvar o ponto e abrir a localização em uma nova aba. Não há mapa incorporado neste ambiente.</p>
+<div class="cad-location-tools" data-location-tools><a id="address-map" class="button secondary" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" hidden>Abrir no Google Maps (nova aba)</a><span id="map-hint" class="muted">Informe um endereço ou par de coordenadas para abrir no Maps.</span><small>O Google Maps receberá o endereço ou ponto somente ao abrir o link.</small></div>
+</div>
+</fieldset>
+</div>

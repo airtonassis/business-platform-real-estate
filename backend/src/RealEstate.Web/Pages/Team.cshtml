@@ -1,0 +1,11 @@
+@page "/administration/team"
+@model RealEstate.Web.Pages.TeamModel
+@{ViewData["Title"]="Equipe e Colaboradores";}
+<div class="page-heading"><div><p class="eyebrow">Administração</p><h1>Equipe e Colaboradores</h1><p class="muted">Colaboradores autorizados na filial ativa.</p></div><span class="badge">Acesso restrito</span></div>
+@if(Model.Error is not null){<p class="notice error" role="alert">@Model.Error</p>}
+@if(Model.Directory is {} directory){
+<form method="get" class="card form-card customer-panel"><label class="form-field">Pesquisar por nome ou login corporativo<input name="Query" value="@Model.Query" type="search" maxlength="200"/></label><button class="button secondary">Pesquisar</button> <a href="/administration/team">Limpar</a></form>
+<section class="card form-card customer-panel"><h2>Colaboradores (@directory.Items.Count)</h2>
+@if(directory.Items.Count==0){<p>Nenhum colaborador encontrado neste escopo.</p>}
+else{<div class="listing-table-scroll" role="region" aria-label="Equipe autorizada" tabindex="0"><table class="property-table"><thead><tr><th>Colaborador</th><th>Login corporativo</th><th>Situação no Core</th><th>Filiais</th></tr></thead><tbody>@foreach(var person in directory.Items){<tr><td><a href="/administration/team/@person.Id">@person.DisplayName</a></td><td>@person.CorporateLogin</td><td>@person.ActivationState @(person.Activated?"· Ativado":"· Pendente")</td><td>@string.Join(", ",person.Establishments.Select(e=>e.Name+(e.IsHeadquarters?" (matriz)":"")))</td></tr>}</tbody></table></div>}
+</section>}

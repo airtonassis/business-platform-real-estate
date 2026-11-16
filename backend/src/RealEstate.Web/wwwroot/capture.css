@@ -1,0 +1,22 @@
+.capture-group{border:1px solid #dfe7f5;border-radius:14px;padding:18px;min-width:0}
+.capture-group legend{padding:0 8px;color:#0e2447;font-weight:700}
+.capture-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;margin:8px 0 16px}
+.capture-choice{min-width:0}.capture-chip{display:flex;align-items:center;gap:10px;border:1px solid #d4def0;border-radius:9px;padding:12px;cursor:pointer;background:#f6f9fe;min-height:48px}
+.capture-chip:has(input:checked){border-color:#4934dc;background:#efedff;color:#20158b}.capture-chip:focus-within{outline:2px solid #4934dc;outline-offset:2px}
+.capture-chip input{width:18px!important;min-height:18px!important;height:18px!important;accent-color:#4934dc;flex:none}
+.capture-choice-detail{padding:12px 0;display:grid;gap:12px}.capture-choice-detail label{display:grid;gap:6px}.capture-choice-detail textarea{width:100%;box-sizing:border-box}
+#property-form [hidden]{display:none!important}
+.capture-group [data-choice-new]{margin-top:12px;max-width:440px}
+#shared-profile-dialog{max-width:min(900px,94vw);max-height:90vh;overflow:auto;border:1px solid #dfe7f5;border-radius:18px}#shared-profile-dialog::backdrop{background:#081d43a0}
+#shared-profile-dialog label{display:grid;gap:6px;margin-bottom:12px}#shared-profile-dialog input:not([type=checkbox]),#shared-profile-dialog select,#shared-profile-dialog textarea{box-sizing:border-box;max-width:100%;padding:10px;border:1px solid #d4def0;border-radius:8px}#shared-profile-dialog .capture-chip{display:flex;flex-wrap:wrap}.capture-inheritance{display:grid;gap:8px}
+#shared-profile-dialog [hidden]{display:none!important}
+.owner-contact{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.owner-contact>fieldset,.owner-contact label.full{grid-column:1/-1}
+.owner-contact .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.owner-contact label{min-width:0;display:grid;gap:6px}.owner-contact input,.owner-contact select{width:100%;min-width:0;box-sizing:border-box}
+[data-owner-new]>.form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+[data-owner-new]>.form-grid>label:first-child{grid-column:1/-1}
+.cad-section [data-owner-new] .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#shared-profile-dialog:has([data-profile-owner]:not([hidden])){padding:20px}
+@media(max-width:600px){.owner-contact,.owner-contact .form-grid,[data-owner-new]>.form-grid,.cad-section [data-owner-new] .form-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.capture-group{padding:12px}.capture-choices{grid-template-columns:1fr}}

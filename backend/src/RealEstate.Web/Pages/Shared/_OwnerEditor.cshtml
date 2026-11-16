@@ -1,0 +1,12 @@
+@model RealEstate.Web.Pages.PropertyModel
+<details class="form-field full capture-group" data-owner-editor><summary>Buscar ou cadastrar proprietário</summary>
+<label>CPF / CNPJ ou nome<input data-owner-query maxlength="200" autocomplete="off"/></label><button type="button" class="button secondary" data-owner-search>Buscar</button>
+@if(Model.CanEditOwner){<button type="button" class="button secondary" data-edit-shared="Owner">Editar proprietário selecionado</button>}
+<div data-owner-results class="form-actions"></div>
+@if(Model.CanCreateOwner){<details data-owner-new><summary>Novo proprietário</summary>
+<div class="form-grid"><label><span data-owner-name-label>Nome completo</span><input data-owner-name maxlength="200" autocomplete="off"/></label>
+<label>Pessoa<select data-owner-kind><option value="PF">Pessoa física</option><option value="PJ">Pessoa jurídica</option></select></label>
+<label><span data-owner-document-label>CPF</span><input data-owner-document maxlength="18" inputmode="numeric" autocomplete="off"/></label></div>
+<partial name="_OwnerContactFields"/>
+<div class="form-actions"><button type="button" class="button secondary" data-owner-cancel>Cancelar</button><button type="button" class="button primary" data-owner-create>Salvar</button></div></details>}
+<p role="status" data-owner-status aria-live="polite"></p></details>

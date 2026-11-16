@@ -1,0 +1,20 @@
+﻿@page "/administration/team/{id:guid}"
+@model RealEstate.Web.Pages.TeamMemberModel
+@using RealEstate.Domain
+@{ViewData["Title"]="Ficha do colaborador";}
+<a href="/administration/team">← Equipe e Colaboradores</a>
+@if(Model.Notice is not null){<p class="notice" role="status">@Model.Notice</p>}
+@if(Model.Error is not null){<p class="notice error" role="alert">@Model.Error</p>}
+@if(Model.TeamFile is {} file){
+<div class="page-heading"><div><p class="eyebrow">Administração · Equipe</p><h1>@file.Person.DisplayName</h1><p>@file.Person.CorporateLogin · @file.Person.ActivationState</p></div></div>
+<section class="card form-card customer-panel"><h2>Acesso no Core</h2><p>Perfil: <code>@file.Person.ProfileId</code></p><p>Filiais: @string.Join(", ",file.Person.Establishments.Select(e=>e.Name+(e.IsHeadquarters?" (matriz)":"")))</p>
+<details><summary>Permissões efetivas no Imob (@file.Person.Permissions.Count)</summary><ul>@foreach(var grant in file.Person.Permissions){<li><code>@grant.ResourceKey · @grant.PermissionKey</code></li>}</ul></details></section>
+@if(!file.Person.Activated||string.IsNullOrWhiteSpace(file.Person.Subject)){<p class="notice">Aguarde a ativação no Core para vincular a ficha profissional.</p>}
+else{<form method="post" class="card form-card customer-panel"><h2>Dados profissionais</h2><input type="hidden" asp-for="Version"/>
+<div class="form-grid"><label class="form-field">Cargo / função<input asp-for="Input.JobTitle" required maxlength="100" list="team-job-titles"/></label><datalist id="team-job-titles"><option>Corretor</option><option>Corretora</option><option>Atendente Comercial</option><option>Gerente Comercial</option></datalist>
+<label class="form-field">CRECI<input asp-for="Input.Creci" maxlength="30"/></label><label class="form-field">UF do CRECI<select asp-for="Input.CreciUf"><option value="">Selecione</option>@foreach(var uf in TeamRules.States){<option value="@uf">@uf</option>}</select></label>
+<label class="form-field">Situação operacional<select asp-for="Input.Status"><option>Ativo</option><option>Inativo</option></select></label></div>
+<fieldset><legend>Áreas de atuação</legend>@foreach(var area in TeamRules.Areas){<label><input type="checkbox" name="Input.Areas" value="@area" checked="@Model.Input.Areas.Contains(area)"/> @area</label>}</fieldset>
+<label class="form-field">Observações<textarea asp-for="Input.Notes" maxlength="4000" rows="3"></textarea></label><div class="form-actions"><a class="button secondary" href="/administration/team">Cancelar</a><button class="button primary" type="submit">Salvar dados profissionais</button></div></form>}
+}
+

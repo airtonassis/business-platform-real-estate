@@ -1,0 +1,23 @@
+@model RealEstate.Domain.PropertyV2
+@using RealEstate.Domain
+@using RealEstate.Web
+@{
+    var customer=(RealEstate.Web.Pages.CustomerModel)ViewData["CustomerModel"]!;
+    var property=Model;
+    var address=property.Data.Address;
+    var location=string.Join(" / ",new[]{address?.Municipality,address?.State,address?.Neighborhood}.Where(x=>!string.IsNullOrWhiteSpace(x)));
+    var prices=customer.WalletValues(property).ToArray();
+}
+<span class="commercial-property-media">@if(customer.PropertyCovers.TryGetValue(property.Id,out var cover)){<img class="property-cover" src="/properties/@property.Id?handler=Content&amp;mediaId=@cover" alt="Foto principal de @(property.CommercialCode??"imóvel")" loading="lazy"/>}else{<span class="property-photo-placeholder" role="img" aria-label="Sem foto principal">Sem foto</span>}</span>
+<span class="commercial-property-content"><span class="commercial-property-code">@(property.CommercialCode??"Código comercial pendente")</span><span class="commercial-property-type">@(property.Data.Type??"Tipo não informado")</span>@if(!string.IsNullOrWhiteSpace(property.Data.Title)){<span class="commercial-property-title">@property.Data.Title</span>}<span class="commercial-property-location"><span class="surface-icon cyan commercial-property-location-icon" aria-hidden="true"><svg class="icon small-icon"><use href="/cad-icons.svg#pin"/></svg></span>@(location.Length==0?"Localização não informada":location)</span>
+@{var captureIndicators=CommercialPropertyIndicators.Resolve(property,null);}
+@if(captureIndicators.Bedrooms.HasValue||captureIndicators.Parking.HasValue){<span class="commercial-property-indicators" aria-label="Características do imóvel">
+@if(captureIndicators.Bedrooms is {} bedrooms){<span class="commercial-property-indicator indicator-bedrooms" data-indicator-bedrooms="@bedrooms" aria-label="Dormitórios: @bedrooms"><svg class="icon small-icon" aria-hidden="true"><use href="/cad-icons.svg#bed"/></svg><span class="sr-only">Dormitórios: </span><strong>@bedrooms</strong></span>}
+@if(captureIndicators.Parking is {} parking){<span class="commercial-property-indicator indicator-parking" data-indicator-parking="@parking" aria-label="Vagas de garagem: @parking"><svg class="icon small-icon" aria-hidden="true"><use href="/cad-icons.svg#car"/></svg><span class="sr-only">Vagas de garagem: </span><strong>@parking</strong></span>}
+</span>}
+@foreach(var price in prices){var amount=price.Value.DifferentAdvertised?price.Value.Advertised:price.Value.Authorized;var indicators=CommercialPropertyIndicators.Resolve(property,price.Announcement);<span class="commercial-property-price"><span>@price.Purpose</span><strong>@(amount.HasValue?Brl.Currency(amount):"Valor comercial não informado")</strong></span>
+@if(indicators.CondominiumFee.HasValue||indicators.PropertyTax.HasValue){<span class="commercial-property-fees" data-indicator-purpose="@price.Purpose">
+@if(indicators.CondominiumFee is {} condominiumFee){var period=CommercialCardFormatting.PeriodLabel(indicators.CondominiumPeriod);<span class="commercial-property-indicator indicator-condominium" data-indicator-condominium="@condominiumFee" aria-label="Condomínio: @Brl.Currency(condominiumFee) @period"><svg class="icon small-icon" aria-hidden="true"><use href="/cad-icons.svg#building"/></svg><span class="fee-name">Condomínio</span><strong>@Brl.Currency(condominiumFee)</strong><span class="fee-period">@period</span></span>}
+@if(indicators.PropertyTax is {} propertyTax){var period=CommercialCardFormatting.PeriodLabel(indicators.PropertyTaxPeriod);<span class="commercial-property-indicator indicator-tax" data-indicator-tax="@propertyTax" aria-label="IPTU: @Brl.Currency(propertyTax) @period"><svg class="icon small-icon" aria-hidden="true"><use href="/cad-icons.svg#tax-receipt"/></svg><span class="fee-name">IPTU</span><strong>@Brl.Currency(propertyTax)</strong><span class="fee-period">@period</span></span>}
+</span>}}
+@if(prices.Length==0){<span class="commercial-property-price"><strong>Valor comercial não informado</strong></span>}</span>

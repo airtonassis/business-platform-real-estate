@@ -1,0 +1,27 @@
+/* CAD-1C: AraiA v1 card/controls from Figma 2:59; location symbol from 4:6/4:7. */
+#cad-2:has(.location-editor){border-color:#dfe7f5;border-radius:18px;padding:24px 28px;background:#fff}
+#cad-2:has(.location-editor)>summary{height:43px;box-sizing:border-box;padding:3px 6px;margin-bottom:24px;background:#f2f5ff;border-radius:10px}
+#cad-2:has(.location-editor)>summary>span:not(.location-symbol),#cad-2:has(.location-editor)>summary>.cad-availability{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.location-symbol{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:rgba(14,154,152,.14);flex:0 0 34px}
+.location-symbol img{display:block;flex:none}
+#cad-2>.form-grid{display:block}
+.location-editor{display:grid;gap:28px;min-width:0}
+#property-form .location-group{border:0;padding:0;margin:0;min-width:0}
+.location-group legend{font-size:16px;font-weight:700;color:#0e2447;margin-bottom:8px;padding:0}
+.location-group>p{font-size:13px;line-height:1.6;margin:0 0 22px}
+.location-group .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 22px}
+#property-form #cad-2 .form-field label{font-size:14px;font-weight:700;line-height:24px;color:#0e2447;margin-bottom:7px}
+#property-form #cad-2 .form-field input,#property-form #cad-2 .form-field select{min-height:51px;border:1px solid #d4def0;border-radius:9px;background:#f6f9fe;color:#243b59;font-size:14px}
+#cad-2 .form-field small{font-size:11px;line-height:1.5;margin-top:6px;display:block}
+.location-address-grid .location-street{grid-column:1/-1}
+.location-group.location-point{padding-top:24px!important;border-top:1px solid #dfe7f5!important}
+.location-coordinate-status{margin:18px 0!important;padding:12px 14px;background:#f2f5ff;border-radius:9px;color:#243b59;font-size:13px}
+.location-coordinate-status[data-state=partial],.location-coordinate-status[data-state=invalid]{background:#fff7e6;color:#795115}
+.location-map-state{padding:18px;border:1px solid #dfe7f5;border-radius:12px;background:#fbfcff;color:#243b59}
+.location-map-state strong{display:block;font-size:14px;font-weight:700}
+.location-map-state p{font-size:13px;line-height:1.6;margin:7px 0 14px}
+#cad-2 .cad-location-tools{display:grid;justify-items:start;gap:10px;padding:0;font-size:12px}
+#cad-2 .cad-location-tools small{font-size:11px;line-height:1.5;color:var(--text-muted)}
+@media(max-width:760px){#cad-2:has(.location-editor){padding:18px 16px}.location-group .form-grid{grid-template-columns:minmax(0,1fr);gap:20px}.location-address-grid .location-street{grid-column:auto}#property-form #cad-2 .form-field input,#property-form #cad-2 .form-field select{font-size:16px}.location-map-state{padding:14px}#cad-2 .cad-location-tools a{max-width:100%;white-space:normal}}
+
+.location-manual-tools{display:grid;gap:8px;margin:12px 0;max-width:680px}.location-manual-tools input{width:100%;box-sizing:border-box}.location-manual-tools small{color:var(--text-muted);font-size:12px}.location-manual-tools .form-actions{margin:0;padding:0;border:0;gap:8px;flex-wrap:wrap}

@@ -1,0 +1,8 @@
+@model RealEstate.Domain.PropertyInputV2
+@foreach(var operation in RealEstate.Domain.CommercialValues.Active(Model)){
+    <div data-active-operation="@operation.Key"><strong>@operation.Label</strong><br/>Autorizado: @(operation.Value.Authorized is null?"Não informado":RealEstate.Web.Brl.Currency(operation.Value.Authorized))
+    @if(operation.Value.DifferentAdvertised){<br/><span>Anunciado: @(operation.Value.Advertised is null?"Não informado":RealEstate.Web.Brl.Currency(operation.Value.Advertised))</span>}
+    @if(operation.Value.Period is {} period){<br/><span>@(period switch{"daily"=>"Diária","weekly"=>"Semanal","monthly"=>"Mensal","annual"=>"Anual","single"=>"Única",_=>period})</span>}
+    </div>
+}
+@if(!RealEstate.Domain.CommercialValues.Active(Model).Any()){<span>Modalidade não informada</span>}

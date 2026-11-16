@@ -1,0 +1,14 @@
+<div class="form-grid owner-contact" data-owner-contact>
+<label data-owner-trade>Nome fantasia<input data-contact="tradeName" maxlength="200" autocomplete="organization"/></label>
+<label>Telefone / WhatsApp<input data-contact="phone" maxlength="30" type="tel" autocomplete="tel"/></label>
+<label>E-mail<input data-contact="email" maxlength="254" type="email" autocomplete="email"/></label>
+<fieldset class="full capture-group"><legend>Endereço <small class="muted">Opcional</small></legend><div class="form-grid">
+<label>CEP<input data-address="PostalCode" maxlength="9" inputmode="numeric" autocomplete="postal-code"/></label>
+<label>Número<input data-address="Number" maxlength="50"/></label>
+<label class="full">Logradouro<input data-address="Street" maxlength="300" autocomplete="address-line1"/></label>
+<label>Complemento<input data-address="Complement" maxlength="200" autocomplete="address-line2"/></label>
+<label>Bairro<input data-address="Neighborhood" maxlength="200"/></label>
+<label>Cidade<input data-address="Municipality" maxlength="200" autocomplete="address-level2"/></label>
+<label>UF<select data-address="State"><option value="">Selecione</option>@foreach(var state in StructuredAddressRules.States){<option>@state</option>}</select></label>
+</div><p class="muted" data-owner-cep-status role="status" aria-live="polite"></p></fieldset>
+</div>

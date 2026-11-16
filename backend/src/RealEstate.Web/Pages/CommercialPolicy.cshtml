@@ -1,0 +1,38 @@
+@page "/commercial-policy"
+@model RealEstate.Web.Pages.CommercialPolicyModel
+@using System.Globalization
+@{ViewData["Title"]="Políticas comerciais";ViewData["ModernCadastro"]=true;}
+<div class="page-heading"><div><p class="eyebrow">Imob · Configuração organizacional</p><h1>Políticas comerciais</h1><p>Condições preliminares de captação. Uma revisão só pode ser aplicada após aprovação por outro gestor.</p></div><a class="button secondary" href="/">Voltar aos imóveis</a></div>
+@if(Model.Error is not null){<div class="error" role="alert">@Model.Error</div>}
+@if(Model.Response.StatusCode is not(401 or 403 or 503)){
+<form method="post" class="card form-card" id="policy-form"><h2>@(Model.PropertyId is null?"Política da imobiliária":"Exceção para este imóvel")</h2><fieldset disabled="@(!Model.CanEdit)">
+<input type="hidden" asp-for="RevisionId"/><input type="hidden" asp-for="BaseRevisionId"/><input type="hidden" asp-for="PropertyId"/><input type="hidden" asp-for="Version"/>
+<div class="form-grid"><label>Nome<input asp-for="Name" maxlength="200" required/></label><label>Justificativa<input asp-for="Reason" maxlength="1000" required/></label>
+@foreach(var field in CaptureFields.All.Where(f=>f.Category==12)){
+var key=field.Path.Split('.').Last();var property=typeof(PreliminaryFees).GetProperty(key)!;var value=property.GetValue(Model.Fees);var name="Fees."+key;
+<label>@field.Label
+@if(field.Kind=="textarea"){@Html.TextArea(name,value?.ToString(),3,30,new{maxlength=2000})}
+else if(field.Kind=="money"){<brl-input name="@name" value="@((decimal?)value)"/>}
+else{@Html.TextBox(name,value is decimal number?number.ToString(CultureInfo.InvariantCulture):value?.ToString(),new{type="number",step="0.01",min="0",inputmode="decimal"})}
+</label>}
+</div><h3>Modelos preliminares de rateio</h3><p class="muted">Configure papéis e critérios. Participantes comerciais e beneficiários financeiros serão identificados na negociação; esta configuração não apura nem efetiva comissões.</p>
+<div class="form-grid" data-allocation-rows>
+@for(var i=0;i<Math.Max(Model.Fees.Allocations.Count+1,3);i++){
+var a=Model.Fees.Allocations.ElementAtOrDefault(i);var prefix=$"Fees.Allocations[{i}]";
+<fieldset class="capture-group form-field full"><legend>Participante @(i+1)</legend><div class="form-grid">
+<label>Operação<select name="@(prefix).Operation"><option value="sale" selected="@(a?.Operation=="sale")">Venda</option><option value="rental" selected="@(a?.Operation=="rental")">Locação</option><option value="administration" selected="@(a?.Operation=="administration")">Administração</option></select></label>
+<label>Participação<select name="@(prefix).ParticipantKind"><option value="organization" selected="@(a?.ParticipantKind=="organization")">Imobiliária</option><option value="internal" selected="@(a?.ParticipantKind=="internal")">Interna</option><option value="external" selected="@(a?.ParticipantKind=="external")">Externa</option></select></label>
+<label>Papel<input name="@(prefix).RoleLabel" value="@a?.RoleLabel" maxlength="200"/></label><label>Base / critério<input name="@(prefix).BaseDescription" value="@a?.BaseDescription" maxlength="500"/></label>
+<label>Percentual<input type="number" name="@(prefix).Percent" value="@a?.Percent?.ToString(CultureInfo.InvariantCulture)" min="0" max="100" step="0.0001"/></label><label>Ou valor fixo<brl-input name="@(prefix+".Amount")" value="@a?.Amount"/></label>
+</div></fieldset>}
+</div>@if(Model.CanEdit){<button type="button" class="button secondary" data-add-allocation>+ Participante</button>}
+<h3>Modalidades sugeridas de garantia</h3><p class="muted">São sugestões de modalidades aceitas pelo proprietário, não garantias contratadas. “Sem garantia” é exclusiva.</p>
+<div class="form-grid" data-policy-guarantees>
+@for(var i=0;i<Model.Guarantees.Count;i++){var item=Model.Guarantees[i];var prefix=$"Guarantees[{i}]";<label class="choice-tile"><input type="hidden" name="@(prefix).GroupId" value="guarantees"/><input type="hidden" name="@(prefix).OptionId" value="@item.OptionId"/><input type="hidden" name="@(prefix).Label" value="@item.Label"/><span><input type="checkbox" name="@(prefix).Selected" value="true" checked="@item.Selected" data-guarantee="@item.OptionId"/>@item.Label</span><input type="text" name="@(prefix).Detail" value="@item.Detail" placeholder="Condições opcionais" maxlength="2000"/></label>}
+</div>@if(Model.CanEdit){<button type="button" class="button secondary" data-add-guarantee>+ Outros</button><div class="form-actions"><button class="button" type="submit">Salvar revisão em rascunho</button></div>}</fieldset></form>
+}
+<section class="card form-card"><h2>Revisões e aprovações</h2>
+@foreach(var r in Model.Revisions){<article class="capture-group"><h3>@r.Input.Name · @(r.Status=="Approved"?"Aprovada":"Rascunho")</h3><p>@(r.Input.PropertyId is null?"Política organizacional":"Exceção por imóvel") · Versão @r.Version</p><p>@r.Input.Reason</p>@if(Model.CanEdit){<a class="button secondary" href="/commercial-policy?revision=@r.Id">@(r.Status=="Draft"?"Editar rascunho":"Criar revisão a partir desta")</a>}
+@if(Model.CanApprove&&r.Status=="Draft"){<form method="post" asp-page-handler="Approve"><input type="hidden" name="id" value="@r.Id"/><input type="hidden" name="expectedVersion" value="@r.Version"/><label>Justificativa da aprovação<input name="approvalReason" maxlength="1000" required/></label><button class="button" type="submit">Aprovar revisão</button></form>}
+<details><summary>Histórico (@r.History.Count)</summary><ul>@foreach(var h in r.History){<li>Versão @h.Version · @h.At.ToString("u") · @h.Actor</li>}</ul></details></article>}
+</section><script src="/commercial-policy.js" defer></script>

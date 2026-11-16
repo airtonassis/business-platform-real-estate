@@ -1,0 +1,106 @@
+@page "/properties/{key}"
+@model PropertyModel
+<partial name="_CommercialPropertyLink" model="Model.Key"/>
+@{ViewData["Title"]=Model.IsDuplicate?"Duplicar anúncio":Model.IsNew?"Cadastrar imóvel":Model.CanWrite?"Consultar e editar imóvel":"Consultar imóvel";ViewData["ModernCadastro"]=true;ViewData["IsRural"]=IdentificationRules.IsRural(Model.Input.Type);}
+<div class="page-heading"><div><p class="eyebrow"><span class="cad-product">Imob</span> · IMÓVEIS · RASCUNHO</p><h1>@ViewData["Title"] <span class="cad-draft">Rascunho</span></h1><p class="muted">Dados essenciais para iniciar o cadastro do imóvel.</p></div><div class="form-actions">@if(Model.Allowed&&Model.CanCreate&&!Model.IsNew){<a href="/properties/new" class="button primary" data-new-property>Novo imóvel</a>}@if(Model.Allowed&&Model.CanCreate&&!Model.IsNew&&Model.ActiveEstablishmentId==Model.Input.EstablishmentId ){<a class="button secondary" data-duplicate href="/properties/new?copyFrom=@Model.Key&amp;copyAnnouncementId=@Model.AnnouncementId">Duplicar</a>}<a href="/" class="button secondary">Voltar aos imóveis</a></div></div>
+@if(Model.Allowed){<div class="cad-property-summary" aria-label="Resumo do imóvel"><strong data-summary-type>@Model.Input.Type</strong><span data-summary-category>@Model.Input.Category</span>@if(Model.Input.OwnerId is {} ownerId){var owner=Model.Owners.FirstOrDefault(o=>o.Id==ownerId);<span data-summary-owner>Proprietário: @(owner?.Name??"vinculado")</span>}else{<span data-summary-owner hidden></span>}</div>}
+@if(Model.Error is not null){<div class="error" role="alert" tabindex="-1" data-error-focus><p>@Model.Error</p><div asp-validation-summary="All"></div></div>}
+@if(Model.Allowed){
+<form method="post" class="card form-card" id="property-form" data-session-subject="@Model.CurrentSubject" data-session-organization="@Model.CurrentOrganizationId" data-session-establishment="@Model.ActiveEstablishmentId" data-adaptation="@System.Text.Json.JsonSerializer.Serialize(RealEstate.Web.CadastroPresentation.Adaptation,new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))" data-rural-types="@System.Text.Json.JsonSerializer.Serialize(IdentificationRules.RuralTypes)" data-property-copy="@(Model.IsPropertyCopy?"true":"false")" data-submit-feedback aria-describedby="property-hint"><input type="hidden" asp-for="Version"/><input type="hidden" asp-for="Step"/><input type="hidden" asp-for="SourcePropertyId"/><input type="hidden" asp-for="AnnouncementId"/><input type="hidden" asp-for="SourceVersion"/><input type="hidden" asp-for="RequestId"/><input type="hidden" asp-for="CopyFrom"/><input type="hidden" asp-for="CopyAnnouncementId"/><input type="hidden" asp-for="CopyVersion"/><input type="hidden" asp-for="CopyMediaRevision"/><input type="hidden" asp-for="CopyCover"/>@foreach(var mediaId in Model.CopyOrder){<input type="hidden" name="CopyOrder" value="@mediaId"/>}
+@if(!Model.CanWrite){<p class="notice" role="note">Modo consulta. Você pode visualizar os dados, mas não possui permissão para salvar alterações.</p>}
+@if(Model.SharedReadOnly){<p class="notice" data-shared-notice>Dados do imóvel e fotos são compartilhados e estão em consulta. Revise a finalidade e os valores deste anúncio antes de salvar.</p>}
+<partial name="_PolicyBinding" model="Model"/>
+<div class="cad-workspace">
+<nav class="cad-categories" aria-label="Categorias do cadastro"><p class="cad-nav-title">Etapas do cadastro</p><ol>
+@foreach(var category in RealEstate.Web.CadastroPresentation.NavigationCategories){var hide=!RealEstate.Web.CadastroPresentation.IsApplicable(category,Model.Input);<li data-category-link="@category.Id" hidden="@hide"><a href="#cad-@category.Id"><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@category.Icon"/></svg><span class="cad-nav-copy">@category.Name<small>@category.Availability</small></span></a></li>}
+</ol><p class="cad-nav-hint">Defina o tipo, a finalidade e o condomínio. As categorias se ajustam automaticamente.</p><details class="cad-inapplicable" data-inapplicable><summary>Outras categorias</summary><ul></ul></details></nav>
+<fieldset class="property-fields" disabled="@(!Model.CanWrite)"><legend class="sr-only">Dados do imóvel</legend>
+<details class="cad-section" id="cad-1" open><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[0].Icon"/></svg><span>@IdentificationRules.Categories[0]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[0].Availability</small></summary><div class="form-grid">
+<div class="form-field full"><span>Estabelecimento do cadastro</span><p>@Model.EstablishmentLabel</p><small class="muted">Preencha no seu ritmo. Todos os campos comerciais são opcionais no rascunho.</small></div>
+<div class="form-field"><label for="commercial-code">Código comercial</label><input id="commercial-code" value="@Model.CommercialCode" readonly placeholder="Atribuição pendente" aria-describedby="commercial-code-help"/><small id="commercial-code-help" class="muted">@(Model.CommercialCode is null?"Atribuído ao salvar com tipo e finalidade mapeados.":"Código permanente deste imóvel.")</small><input type="hidden" asp-for="Input.Code"/></div>
+<div class="form-field"><label asp-for="Input.OwnerId">Proprietário</label><select asp-for="Input.OwnerId"><option value="">Selecione</option>@foreach(var owner in Model.Owners){<option value="@owner.Id">@owner.Name</option>}</select></div>
+<div class="form-field"><label asp-for="Input.Type">Tipo de imóvel</label><select asp-for="Input.Type"><option value="">Selecione</option>@foreach(var type in PropertyRules.Types){<option>@type</option>}</select></div>
+<div class="form-field"><label asp-for="Input.Purpose">Finalidade</label>@if(!Model.IsNew&&Model.Input.Purpose is not null){<select asp-for="Input.Purpose" disabled><option selected>@Model.Input.Purpose</option></select><input type="hidden" name="Input.Purpose" value="@Model.Input.Purpose"/><small class="muted">Finalidade permanente.</small>}else{<select asp-for="Input.Purpose"><option value="">Selecione</option>@foreach(var purpose in IdentificationRules.Purposes){<option>@purpose</option>}</select>}</div>
+<div class="form-field"><label asp-for="Input.Title">Título</label><input asp-for="Input.Title" maxlength="200"/></div>
+<div class="form-field full"><label asp-for="Input.Summary">Descrição resumida</label><textarea asp-for="Input.Summary" maxlength="2000" rows="3"></textarea></div>
+<div class="form-field"><label asp-for="Input.InternalReference">Referência interna (opcional)</label><input asp-for="Input.InternalReference" maxlength="100"/></div>
+<div class="form-field"><label asp-for="Input.IsInCondominium">Imóvel em condomínio</label><select asp-for="Input.IsInCondominium"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></div>
+<partial name="_OwnerEditor" model="Model"/>
+<p class="form-field full muted" id="adaptive-status" role="status" aria-live="polite"></p>
+</div></details>
+<details class="cad-section" id="cad-2" ><summary><span class="location-symbol"><img src="/cad-location-pin.svg" width="22" height="22" alt=""/></span><span>@IdentificationRules.Categories[1]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[1].Availability</small></summary><div class="form-grid">
+<partial name="_AddressEditor" for="Input.Address"/>
+</div></details>
+<details class="cad-section" id="cad-3" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[2].Icon"/></svg><span>@IdentificationRules.Categories[2]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[2].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,3)"/>
+</div></details>
+<details class="cad-section" id="cad-4" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[3].Icon"/></svg><span>@IdentificationRules.Categories[3]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[3].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,4)"/>
+</div></details>
+<details class="cad-section" id="cad-10" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[9].Icon"/></svg><span>@IdentificationRules.Categories[9]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[9].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,10)"/>
+</div></details>
+<details class="cad-section" id="cad-5" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[4].Icon"/></svg><span>@IdentificationRules.Categories[4]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[4].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,5)"/>
+</div></details>
+<details class="cad-section" id="cad-6" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[5].Icon"/></svg><span>@IdentificationRules.Categories[5]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[5].Availability</small></summary><div class="form-grid">
+@if(Model.Input.Price.HasValue){<div class="form-field full"><label asp-for="Input.Price">Valor histórico não classificado (R$)</label><brl-input name="Input.Price" value="@Model.Input.Price" min="0.01"/><small>Registro legado preservado. Não compõe os valores autorizados ou anunciados de venda e locação.</small></div>}
+<p class="form-field full muted" data-purpose-guidance></p>
+
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,6)"/>
+</div></details>
+<details class="cad-section" id="cad-7" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[6].Icon"/></svg><span>@IdentificationRules.Categories[6]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[6].Availability</small></summary><div class="form-grid">
+<p class="form-field full muted" data-owner-reference></p>
+<div class="form-field"><label asp-for="Input.Category">Categoria (opcional)</label>
+@if(Model.Categories.Count>0){<select asp-for="Input.Category"><option value="">Selecione</option>@foreach(var category in Model.Categories){<option>@category</option>}</select>}
+else{<input type="hidden" asp-for="Input.Category"/><p class="muted">Ainda não há categorias disponíveis. O rascunho pode ser salvo sem categoria.</p>}
+</div>
+
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,7)"/>
+</div></details>
+<details class="cad-section" id="cad-8" hidden><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[7].Icon"/></svg><span>@IdentificationRules.Categories[7]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[7].Availability</small></summary><div class="form-grid">
+<p class="form-field full muted">Categoria reservada para evolução do cadastro. Sem preenchimento nesta entrega.</p>
+</div></details>
+<details class="cad-section" id="cad-9" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[8].Icon"/></svg><span>@IdentificationRules.Categories[8]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[8].Availability</small></summary><div class="form-grid">
+<p class="form-field full"><a href="#gallery">Fotos e vídeos</a> · Revise as imagens e descrições na galeria.</p>
+
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,9)"/>
+</div></details>
+
+<details class="cad-section" id="cad-11" hidden="@(Model.Input.IsInCondominium!=true)"><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[10].Icon"/></svg><span>@IdentificationRules.Categories[10]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[10].Availability</small></summary><div class="form-grid">
+<partial name="_CondominiumEditor" model="Model"/>
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,11)"/>
+</div></details>
+<details class="cad-section" id="cad-12" ><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[11].Icon"/></svg><span>@IdentificationRules.Categories[11]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[11].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,12)"/>
+<div class="form-field full"><p class="muted">@(Model.Input.Capture?.Policy is {} binding?$"Condições preliminares vinculadas à revisão aprovada v{binding.Version}.":"Condições preliminares sem política aplicada. Não são comissões efetivadas.")</p>
+@if(Model.CanReadPolicies){<a href="/commercial-policy@(Model.IsNew?"":"?propertyId="+Model.Key)">@(Model.IsNew?"Configurar política da imobiliária":"Políticas e exceção para este imóvel")</a>}
+@if(Model.CanApplyPolicy&&Model.CanWrite&&Model.PolicyRevisions.Count>0){<label>Revisão aprovada<select name="policyRevisionId">@foreach(var r in Model.PolicyRevisions){<option value="@r.Id">@r.Input.Name · v@(r.Version) @(r.Input.PropertyId is null?"":"· exceção deste imóvel")</option>}</select></label><p class="muted">Aplicar substitui as condições preliminares de comissão e as modalidades de garantia pela revisão escolhida. Os demais dados do formulário são preservados.</p><button class="button secondary" type="submit" asp-page-handler="ApplyPolicy">Aplicar revisão e salvar rascunho</button>}
+</div>
+</div></details>
+<details class="cad-section" id="cad-13" hidden="@(!IdentificationRules.HasRental(Model.Input.Purpose))"><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[12].Icon"/></svg><span>@IdentificationRules.Categories[12]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[12].Availability</small></summary><div class="form-grid">
+<partial name="_CaptureEditor" model="new RealEstate.Web.CaptureEditorModel(Model,13)"/>
+</div></details>
+<details class="cad-section" id="cad-14" hidden><summary><svg class="cad-icon" aria-hidden="true"><use href="/cad-icons.svg#@RealEstate.Web.CadastroPresentation.Categories[13].Icon"/></svg><span>@IdentificationRules.Categories[13]</span><small class="cad-availability">@RealEstate.Web.CadastroPresentation.Categories[13].Availability</small></summary><div class="form-grid">
+<p class="form-field full muted">Categoria reservada para evolução do cadastro. Sem preenchimento nesta entrega.</p>
+</div></details></fieldset></div><div class="cad-save-bar"><p class="form-hint muted" id="property-hint">Rascunho · Preencha agora ou continue depois.</p><div class="form-actions"><a class="button secondary" href="/">@(Model.CanWrite?"Cancelar":"Voltar aos imóveis")</a>@if(Model.CanWrite){<button class="button secondary" type="submit" data-pending-label="Salvando imóvel…">Salvar rascunho</button>}<button class="button secondary" type="button" data-cad-back hidden>Voltar</button><button class="button primary" type="button" data-cad-next hidden>Avançar <span aria-hidden="true">→</span></button></div></div><span class="submit-status sr-only" role="status"></span></form>
+}
+<link rel="stylesheet" href="/location.css"/>
+<script type="module" src="/address-editor.js"></script>
+<partial name="_MediaGallery" model="Model"/>
+<link rel="stylesheet" href="/media.css"/>
+<script type="module" src="/media.js"></script>
+
+<link rel="stylesheet" href="/identification.css"/>
+<script type="module" src="/identification.js"></script>
+
+<link rel="stylesheet" href="/capture.css"/><script type="module" src="/capture.js"></script>
+
+<script type="module" src="/owner-editor.js"></script>
+<script type="module" src="/compact-choices.js"></script>
+<script type="module" src="/property-save.js"></script>
+@if(Model.SharedReadOnly){<script src="/announcement-form.js"></script>}
+
+<script type="module" src="/condominium-editor.js"></script>
+
+<partial name="_SharedProfileEditor" model="Model"/><script type="module" src="/shared-profiles.js"></script>

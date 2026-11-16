@@ -1,0 +1,95 @@
+@page "/showcase/{id:guid}"
+@model RealEstate.Web.Pages.ShowcasePropertyModel
+@using RealEstate.Domain
+@{ ViewData["Title"] = "Vitrine Digital"; }
+<a href="/showcase" class="showcase-back">← Seleção comercial</a>
+<div class="page-heading"><div><p class="eyebrow">Imob · Vitrine Digital</p><h1>Apresentação do imóvel</h1></div></div>
+@if (Model.Error is not null) { <div class="card status-panel error" role="alert">@Model.Error</div> }
+@if (Model.Property is {} property) {
+    var data = property.Data;
+    var entry = Model.Entry;
+    var selected = Model.SelectedGallery;
+    var location = string.Join(" · ", new[] { Model.Shows("neighborhood") ? data.Address?.Neighborhood : null, Model.Shows("municipality") ? data.Address?.Municipality : null, Model.Shows("state") ? data.Address?.State : null }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var prices = Model.Shows("price") ? Model.Announcements.Select(a => new { a.Purpose, Amount = a.Data.Values?.DifferentAdvertised == true ? a.Data.Values.Advertised : a.Data.Values?.Authorized }).Where(a => a.Amount is not null).ToArray() : [];
+    var hasIdentity = Model.Shows("commercialCode") && !string.IsNullOrWhiteSpace(property.CommercialCode) || Model.Shows("title") && !string.IsNullOrWhiteSpace(data.Title) || Model.Shows("purpose") && !string.IsNullOrWhiteSpace(data.Purpose) || !string.IsNullOrWhiteSpace(location) || prices.Length > 0;
+    <nav class="showcase-views" aria-label="Áreas da Vitrine">
+        <a href="/showcase/@property.Id" class="@(Model.IsPreparation ? "" : "active")" aria-current="@(Model.IsPreparation ? null : "page")">Apresentação comercial</a>
+        @if (Model.CanManage || Model.CanAuthorize) { <a href="/showcase/@property.Id?view=prepare" class="@(Model.IsPreparation ? "active" : "")" aria-current="@(Model.IsPreparation ? "page" : null)">Preparação e autorização</a> }
+    </nav>
+    @if (!Model.IsPreparation) {
+        <section class="showcase-presentation" aria-label="Apresentação comercial">
+            @if (entry is { State: "Authorized" or "Prepared" } && (Model.CanShare || Model.CanManage || Model.CanAuthorize)) {
+                <article class="showcase-preview" aria-label="@(entry.State == "Authorized" ? "Informações comerciais autorizadas" : "Prévia ainda não autorizada")">
+                    <div class="showcase-hero @(selected.Count > 0 ? "has-media" : "no-media")" data-showcase-gallery>
+                        @if (selected.Count > 0) {
+                            @for (var i = 0; i < selected.Count; i++) {
+                                var item = selected[i];
+                                <div class="showcase-slide" data-showcase-slide="@i" hidden="@(i > 0)">
+                                    @if (item.Kind == "image") { <img src="/properties/@property.Id?handler=Content&amp;mediaId=@item.Id" alt="Fotografia autorizada do imóvel" loading="@(i == 0 ? "eager" : "lazy")" /> }
+                                    else if (item.Kind == "video") { <video controls preload="metadata" src="/properties/@property.Id?handler=Content&amp;mediaId=@item.Id" aria-label="Vídeo autorizado do imóvel"></video> }
+                                </div>
+                            }
+                        } else { <div class="showcase-no-media"><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#image"/></svg><span>Sem mídia autorizada para esta apresentação</span></div> }
+                        @if (hasIdentity) {
+                            <div class="showcase-identity">
+                                <div class="showcase-identity-main">
+                                    @if (Model.Shows("commercialCode") && !string.IsNullOrWhiteSpace(property.CommercialCode)) { <small>@property.CommercialCode</small> }
+                                    @if (Model.Shows("title") && !string.IsNullOrWhiteSpace(data.Title)) { <h2>@data.Title</h2> }
+                                    @if (Model.Shows("purpose") && !string.IsNullOrWhiteSpace(data.Purpose)) { <p>@data.Purpose</p> }
+                                    @if (!string.IsNullOrWhiteSpace(location)) { <p class="showcase-location"><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#pin"/></svg>@location</p> }
+                                </div>
+                                @if (prices.Length > 0) { <div class="showcase-prices">@foreach (var price in prices) { <p><span>@price.Purpose</span><strong>@RealEstate.Web.Brl.Currency(price.Amount)</strong></p> }</div> }
+                            </div>
+                        }
+                    </div>
+                    @if (selected.Count > 1) {
+                        <div class="showcase-thumbnails" role="group" aria-label="Selecionar mídia principal">
+                        @for (var i = 0; i < selected.Count; i++) {
+                            var item = selected[i];
+                            <button type="button" class="showcase-thumbnail @(i == 0 ? "active" : "")" data-showcase-thumb="@i" aria-label="Ver mídia @(i + 1)" aria-pressed="@(i == 0 ? "true" : "false")">
+                                @if (item.Kind == "image") { <img src="/properties/@property.Id?handler=Content&amp;mediaId=@item.Id" alt="" loading="lazy" /> }
+                                else { <svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#image"/></svg><span>Vídeo</span> }
+                            </button>
+                        }
+                        </div>
+                    }
+                    <div class="showcase-content">
+                        @if (Model.Shows("type") && !string.IsNullOrWhiteSpace(data.Type) || Model.Shows("category") && !string.IsNullOrWhiteSpace(data.Category) || Model.Shows("area") && data.Capture?.Areas.Total is not null || Model.Shows("bedrooms") && data.Capture?.Rooms.Bedrooms is not null || Model.Shows("suites") && data.Capture?.Rooms.Suites is not null || Model.Shows("bathrooms") && data.Capture?.Rooms.Bathrooms is not null || Model.Shows("parking") && data.Capture?.Rooms.Parking is not null) {
+                            <dl class="showcase-features">
+                                @if (Model.Shows("type") && !string.IsNullOrWhiteSpace(data.Type)) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#building"/></svg> Tipo</dt><dd>@data.Type</dd></div> }
+                                @if (Model.Shows("category") && !string.IsNullOrWhiteSpace(data.Category)) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#home"/></svg> Categoria</dt><dd>@data.Category</dd></div> }
+                                @if (Model.Shows("area") && data.Capture?.Areas.Total is {} area) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#ruler"/></svg> Área total</dt><dd>@area @data.Capture.Areas.Unit</dd></div> }
+                                @if (Model.Shows("bedrooms") && data.Capture?.Rooms.Bedrooms is {} bedrooms) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#bed"/></svg> Dormitórios</dt><dd>@bedrooms</dd></div> }
+                                @if (Model.Shows("suites") && data.Capture?.Rooms.Suites is {} suites) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#bed"/></svg> Suítes</dt><dd>@suites</dd></div> }
+                                @if (Model.Shows("bathrooms") && data.Capture?.Rooms.Bathrooms is {} bathrooms) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#rooms"/></svg> Banheiros</dt><dd>@bathrooms</dd></div> }
+                                @if (Model.Shows("parking") && data.Capture?.Rooms.Parking is {} parking) { <div><dt><svg class="icon" aria-hidden="true"><use href="/cad-icons.svg#car"/></svg> Vagas</dt><dd>@parking</dd></div> }
+                            </dl>
+                        }
+                        @if (Model.Shows("description") && !string.IsNullOrWhiteSpace(entry.Selection.Description)) { <section class="showcase-description"><h3>Descrição comercial</h3><p>@entry.Selection.Description</p></section> }
+                    </div>
+                </article>
+            } else { <div class="card showcase-awaiting"><h2>Apresentação ainda não autorizada</h2><p class="muted">A seleção comercial precisa ser preparada e autorizada antes de ser apresentada.</p>@if (Model.CanManage || Model.CanAuthorize) { <a class="button secondary" href="/showcase/@property.Id?view=prepare">Abrir preparação</a> }</div> }
+            <div class="card showcase-situation"><strong>@(entry?.State switch { "Prepared" => "Seleção preparada · aguardando autorização", "Authorized" => "Apresentação autorizada", "Withdrawn" => "Apresentação retirada", _ => "Sem seleção comercial" })</strong><p class="muted">@PropertyLifecycle.Label(property.Status) · @(ShowcaseRules.CanPresentAsAvailable(property.Status) ? "Oferta em atendimento" : property.Status == PropertyLifecycle.Negotiated ? "Negociado — não disponível para nova negociação" : "Apresentação indisponível")</p>@if (Model.CanShare) { <p><a href="/showcase/@property.Id">Link interno para usuários autorizados do Imob</a></p> }</div>
+        </section>
+    } else {
+        <section class="showcase-preparation" aria-label="Preparação e autorização">
+            <div class="card showcase-situation"><strong>@(entry?.State switch { "Prepared" => "Seleção preparada · aguardando autorização", "Authorized" => "Apresentação autorizada", "Withdrawn" => "Apresentação retirada", _ => "Sem seleção comercial" })</strong><p class="muted">Salvar a seleção não autoriza a apresentação.</p></div>
+            @if (Model.CanManage && ShowcaseRules.CanPrepare(property.Status)) {
+                <section class="card form-card" aria-labelledby="showcase-edit"><h2 id="showcase-edit">Informações permitidas</h2><p class="muted">Marque somente dados e mídias que podem ser apresentados.</p>
+                    <form method="post" asp-page-handler="Prepare" class="showcase-form"><input type="hidden" asp-for="Version" /><div class="showcase-options">
+                        @foreach (var field in RealEstate.Web.Pages.ShowcasePropertyModel.FieldLabels) { <label><input type="checkbox" name="Fields" value="@field.Key" checked="@Model.Fields.Contains(field.Key)" /> @field.Value</label> }
+                    </div>
+                    @if (Model.Gallery?.Items.Count > 0) { <h3>Fotos e vídeos</h3><div class="showcase-options">@foreach (var item in Model.Gallery.Items.OrderBy(m => m.Position)) { <label><input type="checkbox" name="MediaIds" value="@item.Id" checked="@Model.MediaIds.Contains(item.Id)" /> @item.Name</label> }</div> }
+                    <div class="showcase-description-field"><label for="showcase-description">Texto comercial revisado</label><textarea id="showcase-description" asp-for="Description" maxlength="2000" rows="4"></textarea></div>
+                    <div class="showcase-form-actions"><button class="button primary" type="submit">Salvar seleção</button></div></form>
+                </section>
+            }
+            <div class="showcase-decision-actions">
+                @if (entry is { State: "Prepared" } && Model.CanAuthorize) { <form method="post" asp-page-handler="Authorize"><input type="hidden" asp-for="Version" /><button class="button primary" type="submit">Autorizar apresentação</button></form> }
+                @if (entry is { State: "Authorized" } && Model.CanManage) { <form method="post" asp-page-handler="Withdraw"><input type="hidden" asp-for="Version" /><button class="button secondary" type="submit">Retirar apresentação</button></form> }
+            </div>
+        </section>
+    }
+}
+<link rel="stylesheet" href="/showcase.css" />
+<script src="/showcase-gallery.js" defer></script>

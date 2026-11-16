@@ -1,0 +1,18 @@
+@page "/commercial/customers"
+@model RealEstate.Web.Pages.CustomersModel
+@{ViewData["Title"]="Clientes e Atendimentos";}
+<div class="page-heading"><div><p class="eyebrow">Comercial</p><h1>Clientes e Atendimentos</h1><p class="muted">Relacionamentos e histórico da filial ativa.</p></div>@if(Model.CanCreate){<a href="/commercial/customers/new" class="button primary">Novo cliente</a>}</div>
+@if(Model.Error is not null){<p class="notice error" role="alert">@Model.Error</p>}
+@if(Model.Result is {} result){
+<form method="get" class="card form-card customer-panel"><label class="form-field">Pesquisar por nome, telefone, e-mail ou CPF/CNPJ<input name="Query" value="@Model.Query" maxlength="200" type="search"/></label><button class="button secondary">Pesquisar</button> <a href="/commercial/customers">Limpar</a></form>
+<section class="card form-card customer-panel"><h2>Clientes <span class="muted">(@result.Total)</span></h2>
+@if(result.Items.Count==0){
+    @if(result.Total==0 && !string.IsNullOrWhiteSpace(Model.Query)){
+        <p>Cliente não encontrado.</p>
+        @if(Model.CanCreate){<a class="button primary" href="@Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("/commercial/customers/new","Seed",Model.Query)">Cadastrar cliente</a>}
+    }else if(result.Total==0){<p>Nenhum cliente cadastrado nesta filial.</p>}
+    else{<p>Nenhum cliente nesta página.</p>}
+}
+else {<div class="listing-table-scroll" role="region" aria-label="Clientes encontrados" tabindex="0"><table class="property-table"><thead><tr><th>Cliente</th><th>Contato</th><th>Interesse</th><th>Responsável</th></tr></thead><tbody>@foreach(var c in result.Items){<tr><td data-label="Cliente"><a href="/commercial/customers/@c.Id">@c.Data.Name</a></td><td data-label="Contato">@c.Data.Phone<br/>@c.Data.Email</td><td data-label="Interesse">@c.Data.Interest</td><td data-label="Responsável">@(c.Data.ResponsibleName??c.Data.ResponsibleSubject)</td></tr>}</tbody></table></div>}
+<nav aria-label="Páginas de clientes">@if(result.Page>1){<a href="@Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("/commercial/customers",new Dictionary<string,string?>{{"Query",Model.Query},{"Number",(result.Page-1).ToString()}})">Anterior</a>} <span>Página @result.Page</span> @if(result.Page*25<result.Total){<a href="@Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("/commercial/customers",new Dictionary<string,string?>{{"Query",Model.Query},{"Number",(result.Page+1).ToString()}})">Próxima</a>}</nav></section>
+}
